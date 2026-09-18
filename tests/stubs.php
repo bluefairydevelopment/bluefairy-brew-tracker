@@ -373,6 +373,7 @@ if ( ! function_exists( 'get_post' ) ) {
 
 if ( ! function_exists( 'get_post_status' ) ) {
 	function get_post_status( $id ) { return $GLOBALS['bfbt_posts'][ (int) $id ]['post_status'] ?? false; }
+	function get_post_stati() { return [ 'publish' => 'publish', 'future' => 'future', 'draft' => 'draft', 'pending' => 'pending', 'private' => 'private', 'trash' => 'trash', 'auto-draft' => 'auto-draft', 'inherit' => 'inherit' ]; }
 }
 
 if ( ! function_exists( 'wp_trash_post' ) ) {
@@ -442,7 +443,13 @@ if ( ! class_exists( 'WP_Query' ) ) {
 					continue;
 				}
 
-				if ( 'any' !== $status && ! in_array( $post->post_status, (array) $status, true ) ) {
+				// Core's 'any' is "every status not excluded from search",
+				// which leaves out trash and auto-draft. The stub used to
+				// read it as "everything", and that hid a cascade that never
+				// found the children of a batch deleted from the trash.
+				$wanted = 'any' === $status ? [ 'publish', 'future', 'draft', 'pending', 'private', 'inherit' ] : (array) $status;
+
+				if ( ! in_array( $post->post_status, $wanted, true ) ) {
 					continue;
 				}
 

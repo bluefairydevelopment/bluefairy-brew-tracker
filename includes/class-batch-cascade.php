@@ -117,7 +117,11 @@ class BFBT_Batch_Cascade {
 		for ( $pass = 0; $pass < self::MAX_PAGES; $pass++ ) {
 			$query = new WP_Query( [
 				'post_type'              => [ BFBT_Batch::LOG_TYPE, BFBT_Batch::TASK_TYPE ],
-				'post_status'            => $status,
+				// WP_Query's 'any' means "every status not excluded from
+				// search", which leaves out trash — and a batch is only ever
+				// deleted permanently FROM the trash, where its children are
+				// too. Name every registered status instead.
+				'post_status'            => 'any' === $status ? array_keys( get_post_stati() ) : $status,
 				'post_parent'            => $batch_id,
 				'posts_per_page'         => self::PAGE_SIZE,
 				'paged'                  => $paged,

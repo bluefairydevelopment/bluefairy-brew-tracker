@@ -92,6 +92,33 @@ final class CascadeTest extends TestCase {
 		$this->assertSame( 'publish', $this->post_status_of( $this->theirs ) );
 	}
 
+	/**
+	 * Found by the integration checks: a batch is only ever deleted
+	 * permanently FROM the trash, where its children already are, and a
+	 * WP_Query for status 'any' does not include trash — so the delete
+	 * cascade found nothing and left every entry and task orphaned.
+	 */
+	public function test_delete_from_the_trash_removes_the_children(): void {
+		wp_trash_post( $this->batch );
+		BFBT_Batch_Cascade::on_trashed( $this->batch );
+		$this->assertSame( 'trash', $this->post_status_of( $this->log ) );
+
+		BFBT_Batch_Cascade::on_before_delete( $this->batch );
+
+		$this->assertSame( 'gone', $this->post_status_of( $this->log ) );
+		$this->assertSame( 'gone', $this->post_status_of( $this->task ) );
+		$this->assertSame( 'publish', $this->post_status_of( $this->theirs ) );
+	}
+
+	public function test_the_stub_query_for_any_excludes_trash(): void {
+		// Positive control for the test above: with the stub reading 'any'
+		// as "everything", that test could not have failed.
+		$trashed = wp_insert_post( [ 'post_type' => 'bfbt_log', 'post_parent' => $this->batch, 'post_status' => 'trash' ] );
+		$found   = ( new WP_Query( [ 'post_type' => 'bfbt_log', 'post_status' => 'any', 'post_parent' => $this->batch, 'fields' => 'ids' ] ) )->posts;
+
+		$this->assertNotContains( $trashed, array_map( 'intval', $found ) );
+	}
+
 	public function test_a_log_id_does_not_cascade(): void {
 		BFBT_Batch_Cascade::on_trashed( $this->log );
 

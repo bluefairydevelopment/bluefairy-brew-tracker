@@ -229,7 +229,8 @@ class BFBT_Batch_List_Table extends WP_List_Table {
 			case 'abv':
 				$og = $this->pinned_og( $id );
 
-				if ( '' === $og || ! isset( $this->latest[ $id ] ) ) {
+				// One reading, which is the OG itself, is not an ABV.
+				if ( '' === $og || ! isset( $this->latest[ $id ] ) || $this->latest[ $id ]['id'] === absint( BFBT_Batch::get( $id, 'og_log_id' ) ) ) {
 					return '&mdash;';
 				}
 

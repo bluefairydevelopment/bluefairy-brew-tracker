@@ -27,6 +27,10 @@ defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 delete_option( 'bfbt_features' );
 delete_option( 'bfbt_units' );
 delete_option( 'bfbt_seeded' );
+// Written by WordPress core, not by this plugin: the cached parent/child map
+// it keeps for every hierarchical taxonomy. The style terms themselves stay;
+// core rebuilds this the next time the taxonomy is registered and read.
+delete_option( 'bfbt_style_children' );
 
 global $wpdb;
 

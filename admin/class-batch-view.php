@@ -46,7 +46,7 @@ class BFBT_Batch_View {
 		printf(
 			'<h1 class="wp-heading-inline">%s</h1> %s <a href="%s" class="page-title-action">%s</a> <a href="%s" class="page-title-action">%s</a><hr class="wp-header-end">',
 			esc_html( get_the_title( $batch_id ) ),
-			BFBT_Stage::badge( $stage ), // Escaped by badge().
+			BFBT_Stage::badge( $stage ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside badge().
 			esc_url( BFBT_Batch_Admin::page_url( [ 'view' => 'edit', 'batch_id' => $batch_id ] ) ),
 			esc_html__( 'Edit', 'bluefairy-brew-tracker' ),
 			esc_url( BFBT_Batch_Admin::page_url() ),
@@ -112,7 +112,9 @@ class BFBT_Batch_View {
 
 		echo '<div class="bfbt-abv">';
 
-		if ( '' === $og_sg || null === $latest ) {
+		// The latest reading being the pinned OG itself is one reading, not
+		// two: "ABV 0.0 %" from OG − OG would be a number that measured nothing.
+		if ( '' === $og_sg || null === $latest || (int) $latest['id'] === $og_id ) {
 			echo '<p class="description">' . esc_html__( 'ABV appears once there is an original gravity reading and a later one.', 'bluefairy-brew-tracker' ) . '</p></div>';
 
 			return;
@@ -156,7 +158,7 @@ class BFBT_Batch_View {
 
 	private static function chart( int $batch_id ): void {
 		echo '<h2>' . esc_html__( 'Gravity', 'bluefairy-brew-tracker' ) . '</h2>';
-		echo '<div class="bfbt-chart-wrap">' . BFBT_Chart::svg( BFBT_Log::gravity_series( $batch_id ) ) . '</div>'; // Escaped inside svg().
+		echo '<div class="bfbt-chart-wrap">' . BFBT_Chart::svg( BFBT_Log::gravity_series( $batch_id ) ) . '</div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- every number cast and every label escaped inside svg().
 	}
 
 	private static function due_panel( int $batch_id, string $today ): void {
@@ -192,7 +194,7 @@ class BFBT_Batch_View {
 					esc_attr( trim( 'bfbt-task ' . $class ) ),
 					esc_html( $when ),
 					esc_html( get_the_title( $id ) ),
-					self::task_button( 'bfbt_complete_task', $id, __( 'Done', 'bluefairy-brew-tracker' ), 'button button-small button-primary' )
+					self::task_button( 'bfbt_complete_task', $id, __( 'Done', 'bluefairy-brew-tracker' ), 'button button-small button-primary' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside task_button().
 				);
 			}
 
@@ -211,7 +213,7 @@ class BFBT_Batch_View {
 					'<li class="bfbt-task"><span class="bfbt-due">%s</span> <span class="bfbt-task-title">%s</span> %s</li>',
 					esc_html( substr( BFBT_Task::field( $id, 'done_at' ), 0, 10 ) ),
 					esc_html( get_the_title( $id ) ),
-					self::task_button( 'bfbt_uncomplete_task', $id, __( 'Undo', 'bluefairy-brew-tracker' ), 'button button-small' )
+					self::task_button( 'bfbt_uncomplete_task', $id, __( 'Undo', 'bluefairy-brew-tracker' ), 'button button-small' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside task_button().
 				);
 			}
 
@@ -397,7 +399,7 @@ class BFBT_Batch_View {
 				esc_html( $labels[ $type ] ?? ucfirst( str_replace( '_', ' ', $type ) ) ),
 				esc_html( $title ),
 				esc_html( mb_strlen( $content ) > 120 ? mb_substr( $content, 0, 117 ) . '…' : $content ),
-				$controls // Built from escaped parts above.
+				$controls // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts above.
 			);
 		}
 
@@ -408,9 +410,9 @@ class BFBT_Batch_View {
 
 			for ( $n = 1; $n <= $result['pages']; $n++ ) {
 				if ( $n === $page ) {
-					printf( '<span class="current">%d</span> ', $n );
+					printf( '<span class="current">%d</span> ', absint( $n ) );
 				} else {
-					printf( '<a href="%s">%d</a> ', esc_url( BFBT_Batch_Admin::page_url( [ 'view' => 'view', 'batch_id' => $batch_id, 'lpage' => $n ] ) ), $n );
+					printf( '<a href="%s">%d</a> ', esc_url( BFBT_Batch_Admin::page_url( [ 'view' => 'view', 'batch_id' => $batch_id, 'lpage' => $n ] ) ), absint( $n ) );
 				}
 			}
 
