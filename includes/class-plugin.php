@@ -26,14 +26,19 @@ class BFBT_Plugin {
 	 */
 	public static function boot(): void {
 		BFBT_Batch::init();
+		BFBT_Batch_Cascade::init();
 
 		do_action( 'bfbt_loaded' );
 
-		// The admin screens land in a later phase. The guard lets this file
-		// boot a tree that does not carry them yet.
-		if ( is_admin() && file_exists( BFBT_PATH . 'admin/class-batch-admin.php' ) ) {
+		if ( is_admin() ) {
+			require_once BFBT_PATH . 'admin/class-batch-list-table.php';
+			require_once BFBT_PATH . 'admin/class-batch-view.php';
+			require_once BFBT_PATH . 'admin/class-settings.php';
+			require_once BFBT_PATH . 'admin/class-pro-upsell.php';
 			require_once BFBT_PATH . 'admin/class-batch-admin.php';
 			BFBT_Batch_Admin::init();
+			BFBT_Settings::init();
+			BFBT_Pro_Upsell::init();
 		}
 	}
 
