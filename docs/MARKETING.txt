@@ -1,0 +1,154 @@
+BlueFairy Brew Tracker — Marketing Content
+==========================================
+
+
+3-SENTENCE SUMMARY
+------------------
+
+BlueFairy Brew Tracker is a free WordPress plugin that keeps a batch log for mead, wine, cider and beer — style, vessel, start date, additions, gravity readings, stage, and what is due next — with every batch stored as an ordinary record in your own database. It lives in wp-admin under its own Brew Tracker menu, works out ABV and attenuation from the readings you logged and names the formula it used, draws a gravity chart for every batch, shows what is due in a Due panel on the batch and a Next due column on the list, exports everything as CSV, and leaves your batches in place when it is uninstalled. Requires PHP 8.1+ and WordPress 6.5+ and no other plugin; licensed GPL-2.0-or-later.
+
+
+CSS CLASS PREFIX
+----------------
+
+bfbt   (Brew Tracker — shared with Brew Tracker Pro)
+
+All classes in the product description HTML, hub page, FAQ page, and
+sidebar widget card use this prefix to avoid collisions.
+
+
+HTML LONG DESCRIPTION
+---------------------
+
+(Used as WooCommerce product description. Classes match the
+.bfbt-sp-desc .bfbt-dc-* rules in single-product-brew-tracker.html)
+
+<div class="bfbt-dc-grid">
+
+  <div class="bfbt-dc-card">
+    <div class="bfbt-dc-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6"/><path d="M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 16h10"/></svg>
+    </div>
+    <h3>One Batch Record</h3>
+    <p>Name, style, vessel, start date, volume, target OG and FG, and notes. The style tree comes seeded with Mead, Wine, Cider and Beer and their common substyles; vessels build up as you name them, so &ldquo;Carboy A&rdquo; stays one vessel however many batches go through it. Leave the start date blank for a batch you are still planning.</p>
+  </div>
+
+  <div class="bfbt-dc-card">
+    <div class="bfbt-dc-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <h3>A Timeline You Can Trace</h3>
+    <p>Every entry is dated when it happened, not when it was typed: an addition (&ldquo;Fermaid-O 1.2 g&rdquo;), a gravity reading (&ldquo;SG 1.042 @ 20 &deg;C&rdquo;), a temperature, a pH, a note, a racking with the volume that came across, a stage change. Entries are never edited &mdash; a typo is trashed and re-entered &mdash; so a number on the screen always traces back to the reading that produced it.</p>
+  </div>
+
+  <div class="bfbt-dc-card">
+    <div class="bfbt-dc-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><polyline points="7 14 11 9 14 12 20 5"/></svg>
+    </div>
+    <h3>ABV, Attenuation and the Gravity Chart</h3>
+    <p>The first gravity reading is pinned as the original gravity; pin a different one with a click. ABV and apparent attenuation are worked out from the pinned OG and the latest reading and shown with the dates of both. The standard formula is used up to OG 1.070 and the high-gravity formula above it &mdash; the one a mead needs &mdash; and the screen says which. An inline chart draws every reading over time, with no JavaScript library and no external asset.</p>
+  </div>
+
+  <div class="bfbt-dc-card">
+    <div class="bfbt-dc-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 12 10 5 10-5"/><path d="m2 17 10 5 10-5"/></svg>
+    </div>
+    <h3>A Stage That Cannot Disagree With Itself</h3>
+    <p>Planned, primary, secondary, packaged, complete, dumped &mdash; derived from the milestone dates you record, never stored as a separate field. A batch that was completed and then poured away is dumped, and the completed date left behind does not hide that. The batch screen says how many days it has been in its stage.</p>
+  </div>
+
+  <div class="bfbt-dc-card">
+    <div class="bfbt-dc-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    </div>
+    <h3>Tasks and the Due Panel</h3>
+    <p>Type a task with a due date &mdash; an addition with its quantity, a gravity check, a rack, a package &mdash; and it appears in the Due panel on the batch, overdue in red and today in amber, and in the Next due column on the list. Done logs the addition to the timeline; Undo reopens it. Every task is one you typed: nothing here works out a schedule for you.</p>
+  </div>
+
+  <div class="bfbt-dc-card">
+    <div class="bfbt-dc-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    </div>
+    <h3>CSV Export, and Data That Stays Yours</h3>
+    <p>Export every batch and every entry as one CSV, streamed rather than built in memory, with every field quoted and any value that a spreadsheet might read as a formula defused. Batches, entries and tasks are ordinary WordPress records: they are in your database backup, readable from WP-CLI, and <strong>not deleted when you uninstall the plugin</strong>. Twenty-five batches to a page, sorted and paged in the database, with Trash, Restore and Delete permanently.</p>
+  </div>
+
+  <div class="bfbt-dc-card bfbt-dc-card-pro">
+    <div class="bfbt-dc-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>
+    </div>
+    <h3>Upgrade to Brew Tracker Pro</h3>
+    <p>Pro is an add-on that extends this same batch record, so everything you have logged is there the moment you install it. It adds <strong>recipes</strong> &mdash; an ingredient bill and a schedule template &mdash; and a seeded <strong>library of 25 recipes</strong> for mead, wine, cider and beer at 1, 3 or 5 US gallons; <strong>start a batch from a recipe</strong> with the bill scaled and every task created with its date; a <strong>daily digest email</strong> of what is overdue, due today and due tomorrow; a <strong>dashboard widget, admin calendar and .ics feed</strong> your phone subscribes to; a <strong>vessel board</strong> showing which vessel holds what and which are free; a <strong>Brewer role with phone-first front-end logging</strong>; and <strong>reports</strong> on batches per style, average ABV and attenuation, days per stage and vessel use.</p>
+    <p><a href="/product/bluefairy-brew-tracker-pro/">Get Brew Tracker Pro &mdash; $79</a></p>
+  </div>
+
+</div>
+
+<div class="bfbt-dc-shots">
+  <figure>
+    <img src="/wp-content/uploads/YYYY/MM/BrewTrackerBatchList.png" alt="Brew Tracker batch list showing style, vessel, stage, latest gravity, ABV and next due for every batch">
+    <figcaption>The batch list &mdash; every batch with its stage, latest SG, ABV and what is due next, red when overdue.</figcaption>
+  </figure>
+  <figure>
+    <img src="/wp-content/uploads/YYYY/MM/BrewTrackerBatchView.png" alt="One batch showing ABV with its provenance, the Due panel, the entry form and the timeline">
+    <figcaption>One batch &mdash; ABV and attenuation with the readings they came from, the Due panel, and the timeline beneath.</figcaption>
+  </figure>
+  <figure>
+    <img src="/wp-content/uploads/YYYY/MM/BrewTrackerChart.png" alt="Gravity chart plotting every reading for a batch over time">
+    <figcaption>The gravity chart &mdash; every reading over time, drawn inline; hover a point for the reading and its date.</figcaption>
+  </figure>
+  <figure>
+    <img src="/wp-content/uploads/YYYY/MM/BrewTrackerAddBatch.png" alt="Add batch form with name, style, vessel, start date, volume, target OG and FG">
+    <figcaption>Adding a batch &mdash; name, style from the seeded tree, vessel, start date, volume, target OG and FG.</figcaption>
+  </figure>
+</div>
+
+<div class="bfbt-dc-included">
+  <h3>What&rsquo;s included</h3>
+  <ul>
+    <li>Batch record: name, style, vessel, start date, volume, target OG/FG, notes</li>
+    <li>Style taxonomy seeded with Mead, Wine, Cider, Beer and their substyles &mdash; 24 terms, seeded once</li>
+    <li>Vessel taxonomy with type and capacity</li>
+    <li>Timeline log per batch: additions, gravity, temperature, pH, notes, racking, stage &mdash; entries dated when they happened, never edited</li>
+    <li>Pinned original gravity; ABV and attenuation from the pinned OG and the latest reading, both formulas stated</li>
+    <li>Gravity chart per batch, inline SVG, no external asset</li>
+    <li>Six derived stages: planned, primary, secondary, packaged, complete, dumped</li>
+    <li>Manual tasks with due dates, a Due panel on the batch and a Next due column on the list</li>
+    <li>Paged, sortable batch list with stage and style filters, a Trash view, Restore and Delete permanently</li>
+    <li>Display units: US or metric for derived volumes; a logged quantity is always shown as typed</li>
+    <li>Validation that refuses rather than guesses: calendar-checked dates, gravity as 1.090, fixed unit list</li>
+    <li>CSV export of batches and entries &mdash; streamed, quoted, formula-defused</li>
+    <li>Batches, entries, tasks, styles and vessels kept on uninstall</li>
+    <li>GPL-2.0-or-later &middot; PHP 8.1+ &middot; WordPress 6.5+ &middot; no other plugin required</li>
+  </ul>
+</div>
+
+<p class="bfbt-dc-cta">
+  <a href="/product/bluefairy-brew-tracker/">Get Brew Tracker &mdash; free</a>
+  &nbsp;&middot;&nbsp;
+  <a href="/product/bluefairy-brew-tracker-pro/">Get Brew Tracker Pro &mdash; $79</a>
+</p>
+
+
+NOTES
+-----
+
+This is the FREE half of a free/Pro pair. It shares the hub page and the FAQ
+page with Brew Tracker Pro — see Step 11c of prep-wp-plugin-for-sale.md. Every
+CTA is doubled: the free download beside the Pro purchase. The free product URL
+/product/bluefairy-brew-tracker/ follows the Microgreen pair's convention
+(a $0 WooCommerce product) and must be confirmed once the product exists.
+
+It must NOT carry the licence-manager meta: only the paid half issues keys.
+
+Claims here are bounded by docs/COMPARISON.md and FEATURES.md. Never claim that
+the free plugin sends email, works out a schedule, supports Brix, or has
+"unlimited" batches. The Pro card names only rows from COMPARISON.md; the
+"25 recipes" count is data/recipes.php in the Pro repository (25 seed_slug
+entries: 8 beer, 7 mead, 7 wine, 3 cider) — recheck it if that file changes.
+
+The .bfbt-dc-card-pro modifier and .bfbt-dc-cta class need rules in
+single-product-brew-tracker.html; they are not in the Microgreen template.
+
+Screenshot paths are placeholders: replace /wp-content/uploads/YYYY/MM/ with the
+real upload path after Step 8c.
