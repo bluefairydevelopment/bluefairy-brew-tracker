@@ -247,10 +247,6 @@ lives, and nothing to migrate when you upgrade.
 
 Pro column describes Brew Tracker Pro 1.0.
 
-<!-- Brew Tracker Pro 1.0 is not yet built. The Pro column below is the planned
-     scope from the approved plan; recheck every Pro row against the shipped
-     Pro code before this file is released. The Free column is verified against
-     the code in this repository. -->
 
 | | Pro — $79 | Free |
 |---|---|---|
