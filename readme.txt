@@ -2,7 +2,7 @@
 Contributors: bluefairydevelopment
 Tags: mead, wine, cider, homebrew, beer, fermentation, brewing log
 Requires at least: 6.5
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 8.1
 Stable tag: 1.0.0
 License: GPL-2.0-or-later
@@ -158,6 +158,7 @@ No.
 == Changelog ==
 
 = 1.0.0 =
+* Compatibility: tested against WordPress 7.1.
 * First release: batches, a seeded style tree, vessels, an immutable timeline, pinned original gravity, ABV and attenuation with both formulas, an inline gravity chart, six derived stages, tasks with a Due panel and a Next due column, a paged list with Trash and Restore, display units, and a CSV export. Nothing of yours is removed on uninstall.
 
 == Upgrade Notice ==

@@ -2,6 +2,9 @@
 
 ## [1.0.0] — 2026-09-18
 
+### Changed
+- Compatibility: tested against WordPress 7.1.
+
 First release. The base plugin of the Brew Tracker pair; Brew Tracker Pro
 extends this record rather than keeping its own.
 
