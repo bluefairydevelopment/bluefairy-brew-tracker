@@ -27,6 +27,7 @@ class BFBT_Plugin {
 	public static function boot(): void {
 		BFBT_Batch::init();
 		BFBT_Batch_Cascade::init();
+		BFBT_Photos::init();
 
 		do_action( 'bfbt_loaded' );
 

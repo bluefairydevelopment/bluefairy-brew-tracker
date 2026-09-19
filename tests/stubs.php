@@ -25,6 +25,10 @@ function bfbt_reset_stubs(): void {
 	$GLOBALS['bfbt_insert_fails'] = false;
 	$GLOBALS['bfbt_transients']   = [];
 	$GLOBALS['bfbt_user_id']      = 1;
+	$GLOBALS['bfbt_hooks']        = [];
+	$GLOBALS['bfbt_uploads']      = [];
+	$GLOBALS['bfbt_upload_fails'] = [];
+	$GLOBALS['bfbt_deleted_attachments'] = [];
 }
 
 bfbt_reset_stubs();
@@ -81,7 +85,7 @@ if ( ! function_exists( 'absint' ) ) {
 }
 
 if ( ! function_exists( 'add_action' ) ) {
-	function add_action( $tag, $cb, $priority = 10, $args = 1 ) { return true; }
+	function add_action( $tag, $cb, $priority = 10, $args = 1 ) { $GLOBALS['bfbt_hooks'][ $tag ][] = $cb; return true; }
 }
 
 if ( ! function_exists( 'do_action' ) ) {
@@ -617,4 +621,82 @@ if ( ! function_exists( 'delete_transient' ) ) {
 
 		return $existed;
 	}
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * Uploads and attachments, for the photos on a log entry.
+ * ---------------------------------------------------------------------------
+ *
+ * media_handle_upload() records what it was handed in bfbt_uploads and
+ * inserts an attachment post (status inherit, parent = the entry) unless
+ * the file's name is listed in bfbt_upload_fails, when it answers with
+ * that WP_Error instead — the way core does for a refused type or a
+ * failed move.
+ */
+
+if ( ! function_exists( 'wp_get_mime_types' ) ) {
+	function wp_get_mime_types() {
+		return [
+			'jpg|jpeg|jpe' => 'image/jpeg',
+			'png'          => 'image/png',
+			'gif'          => 'image/gif',
+			'webp'         => 'image/webp',
+			'pdf'          => 'application/pdf',
+			'mp4|m4v'      => 'video/mp4',
+			'txt|asc|c|cc|h|srt' => 'text/plain',
+		];
+	}
+}
+
+if ( ! function_exists( 'media_handle_upload' ) ) {
+	function media_handle_upload( $file_id, $post_id, $post_data = [], $overrides = [] ) {
+		$file = $_FILES[ $file_id ] ?? null;
+
+		$GLOBALS['bfbt_uploads'][] = [ 'key' => $file_id, 'file' => $file, 'post_id' => (int) $post_id, 'overrides' => $overrides ];
+
+		$name = (string) ( $file['name'] ?? '' );
+
+		if ( isset( $GLOBALS['bfbt_upload_fails'][ $name ] ) ) {
+			return new WP_Error( 'upload_error', (string) $GLOBALS['bfbt_upload_fails'][ $name ] );
+		}
+
+		return wp_insert_post( [
+			'post_type'   => 'attachment',
+			'post_status' => 'inherit',
+			'post_parent' => (int) $post_id,
+			'post_title'  => $name,
+			'guid'        => 'https://example.test/uploads/' . $name,
+		] );
+	}
+}
+
+if ( ! function_exists( 'wp_get_attachment_url' ) ) {
+	function wp_get_attachment_url( $id ) {
+		return $GLOBALS['bfbt_posts'][ (int) $id ]['guid'] ?? false;
+	}
+}
+
+if ( ! function_exists( 'wp_delete_attachment' ) ) {
+	function wp_delete_attachment( $id, $force = false ) {
+		$GLOBALS['bfbt_deleted_attachments'][] = (int) $id;
+
+		return wp_delete_post( $id, true );
+	}
+}
+
+if ( ! function_exists( 'sanitize_file_name' ) ) {
+	function sanitize_file_name( $name ) { return preg_replace( '/[^A-Za-z0-9._-]+/', '-', (string) $name ); }
+}
+
+if ( ! function_exists( '_n' ) ) {
+	function _n( $single, $plural, $number, $domain = 'default' ) { return 1 === (int) $number ? $single : $plural; }
+}
+
+if ( ! function_exists( 'size_format' ) ) {
+	function size_format( $bytes, $decimals = 0 ) { return round( $bytes / 1048576 ) . ' MB'; }
+}
+
+if ( ! function_exists( 'wp_max_upload_size' ) ) {
+	function wp_max_upload_size() { return 8 * 1048576; }
 }

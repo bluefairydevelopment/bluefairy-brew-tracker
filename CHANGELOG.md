@@ -26,6 +26,16 @@
   racking volume, temperature — opens on the setting's unit instead of a fixed
   one. The Settings radios read "US (gallons, ounces, °F)" and "Metric (litres,
   grams, °C)".
+- Photos on an entry. The entry form takes up to five images (`photos[]`,
+  image types only); each becomes a media-library attachment whose parent is
+  the entry, shown as a thumbnail in a new Photos column of the timeline and
+  named by URL in a new last column of the CSV entries section, `photos`. A
+  file that is not an image is refused by name while the entry and the other
+  photos are kept ("Entry added, but 1 photo was not saved. “notes.txt”: …");
+  more than five refuses the whole entry before anything is written. Deleting
+  an entry permanently deletes its photos, row and file; trashing keeps them;
+  uninstall keeps them. `BFBT_Photos::split()`, `too_many()`, `attach()`,
+  `for_log()`, `urls()` are the seam the Pro front-end form uses.
 
 ### Fixed
 - A refused save no longer sends you back to an empty form. Every admin form —

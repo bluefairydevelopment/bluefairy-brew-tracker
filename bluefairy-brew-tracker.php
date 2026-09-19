@@ -36,6 +36,7 @@ require_once BFBT_PATH . 'includes/class-abv.php';
 require_once BFBT_PATH . 'includes/class-chart.php';
 require_once BFBT_PATH . 'includes/class-csv.php';
 require_once BFBT_PATH . 'includes/class-batch-cascade.php';
+require_once BFBT_PATH . 'includes/class-photos.php';
 require_once BFBT_PATH . 'includes/class-seeder.php';
 require_once BFBT_PATH . 'includes/class-feature-registry.php';
 require_once BFBT_PATH . 'includes/class-plugin.php';

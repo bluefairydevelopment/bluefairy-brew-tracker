@@ -115,6 +115,24 @@ users who may delete others' posts.
 An entry dated ahead of the site clock stays published. WordPress would
 otherwise schedule it as a future post and drop it from every query.
 
+### Photos on an entry
+
+The entry form takes up to five images with the entry — the krausen, the
+hydrometer, the colour after a racking. Each becomes an ordinary media-library
+attachment whose parent is the entry, shown as a thumbnail in the timeline's
+Photos column (the thumbnail opens the full image) and named by URL in the
+CSV. Only image types the site accepts are stored; anything else is refused by
+name while the entry and the other photos are kept, because a reading typed in
+is worth more than a picture of it: "Entry added, but 1 photo was not saved.
+“notes.txt”: Sorry, you are not allowed to upload this file type." More than
+five refuses the whole entry before anything is written.
+
+Photos follow the entry. Trashing the entry (or its batch) leaves them in
+place for a restore; deleting it permanently deletes them, row and file, where
+WordPress on its own would only orphan them. Uninstall keeps them, as it keeps
+the entry. A browser never re-fills a file input, so a refused save gives back
+every typed field but the photos; the form says so.
+
 ## Original gravity, ABV and attenuation
 
 The first gravity reading you log is pinned as the original gravity. Any other
@@ -218,7 +236,8 @@ capability first and confirms the post type of every id it is handed.
 five hundred rows at a time, never built in memory. Every field is quoted, and a
 value beginning with `=`, `+`, `-`, `@`, a tab or a carriage return is prefixed
 with a single quote so a batch named `=HYPERLINK(...)` opens in a spreadsheet
-as text, not as a formula.
+as text, not as a formula. An entry's photos are named by URL in the last
+column of the entries section, `photos`, space-separated.
 
 ## Uninstall
 
@@ -226,7 +245,7 @@ Uninstalling deletes `bfbt_features`, `bfbt_units`, `bfbt_seeded`, the
 plugin's per-user transients (the one-shot notice and a refused form's
 remembered input), and `bfbt_style_children` — the cached
 parent/child map WordPress itself keeps for the style taxonomy — never a batch,
-an entry, a task, a style or a vessel. There is no `LIKE 'bfbt_%'` sweep: that pattern would also match
+an entry, a task, a photo, a style or a vessel. There is no `LIKE 'bfbt_%'` sweep: that pattern would also match
 the Pro add-on's `bfbtp_` settings.
 
 ## Extension points
@@ -275,6 +294,7 @@ Pro column describes Brew Tracker Pro 1.0.
 | Style taxonomy seeded with Mead, Wine, Cider, Beer and their substyles | Yes | Yes |
 | Vessel taxonomy with type and capacity | Yes | Yes |
 | Timeline log per batch: additions, gravity, temperature, pH, notes, racking | Yes | Yes |
+| Up to five photos on an entry, thumbnails on the timeline | Yes | Yes |
 | ABV and attenuation from the pinned OG and the latest reading, both formulas stated | Yes | Yes |
 | Gravity chart per batch, inline SVG | Yes | Yes |
 | Six-stage cycle: planned, primary, secondary, packaged, complete, dumped | Yes, extended | Yes |

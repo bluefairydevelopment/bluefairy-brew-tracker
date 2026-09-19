@@ -255,7 +255,7 @@ class BFBT_Batch_View {
 		$disabled = static fn( string $type ): string => $type === $selected ? '' : ' disabled';
 
 		echo '<div class="bfbt-panel"><h2>' . esc_html__( 'Add entry', 'bluefairy-brew-tracker' ) . '</h2>';
-		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="bfbt-entry-form">';
+		echo '<form method="post" enctype="multipart/form-data" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="bfbt-entry-form">';
 		wp_nonce_field( 'bfbt_add_log_' . $batch_id );
 		echo '<input type="hidden" name="action" value="bfbt_add_log">';
 		printf( '<input type="hidden" name="batch_id" value="%d">', absint( $batch_id ) );
@@ -316,6 +316,18 @@ class BFBT_Batch_View {
 		echo '</fieldset>';
 
 		printf( '<p><label for="bfbt-log-note">%s</label><br><textarea id="bfbt-log-note" name="note" rows="3" class="large-text">%s</textarea></p>', esc_html__( 'Note', 'bluefairy-brew-tracker' ), esc_textarea( $old( 'note' ) ) );
+
+		// A file input is never re-filled by the browser, so it is the one
+		// field a refused save cannot give back; the description says so.
+		printf(
+			'<p><label for="bfbt-log-photos">%s</label><br><input type="file" id="bfbt-log-photos" name="%s[]" accept="image/*" multiple> <span class="description">%s</span></p>',
+			esc_html(
+				/* translators: %d: the most photos an entry takes */
+				sprintf( __( 'Photos (optional, up to %d)', 'bluefairy-brew-tracker' ), BFBT_Photos::MAX )
+			),
+			esc_attr( BFBT_Photos::FIELD ),
+			esc_html__( 'Images only. If the save is refused, attach them again.', 'bluefairy-brew-tracker' )
+		);
 
 		submit_button( __( 'Add entry', 'bluefairy-brew-tracker' ), 'secondary', 'submit', false );
 		echo '</form></div>';
@@ -387,7 +399,7 @@ class BFBT_Batch_View {
 		}
 
 		echo '<table class="widefat striped bfbt-timeline"><thead><tr>';
-		printf( '<th>%s</th><th>%s</th><th>%s</th><th>%s</th><th></th>', esc_html__( 'When', 'bluefairy-brew-tracker' ), esc_html__( 'Type', 'bluefairy-brew-tracker' ), esc_html__( 'Entry', 'bluefairy-brew-tracker' ), esc_html__( 'Note', 'bluefairy-brew-tracker' ) );
+		printf( '<th>%s</th><th>%s</th><th>%s</th><th>%s</th><th>%s</th><th></th>', esc_html__( 'When', 'bluefairy-brew-tracker' ), esc_html__( 'Type', 'bluefairy-brew-tracker' ), esc_html__( 'Entry', 'bluefairy-brew-tracker' ), esc_html__( 'Note', 'bluefairy-brew-tracker' ), esc_html__( 'Photos', 'bluefairy-brew-tracker' ) );
 		echo '</tr></thead><tbody>';
 
 		foreach ( $result['items'] as $entry ) {
@@ -431,12 +443,13 @@ class BFBT_Batch_View {
 			}
 
 			printf(
-				'<tr class="bfbt-entry bfbt-entry-%s"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="bfbt-entry-controls">%s</td></tr>',
+				'<tr class="bfbt-entry bfbt-entry-%s"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="bfbt-photos">%s</td><td class="bfbt-entry-controls">%s</td></tr>',
 				esc_attr( sanitize_key( $type ) ),
 				esc_html( substr( (string) $entry->post_date, 0, 16 ) ),
 				esc_html( $labels[ $type ] ?? ucfirst( str_replace( '_', ' ', $type ) ) ),
 				esc_html( $title ),
 				esc_html( mb_strlen( $content ) > 120 ? mb_substr( $content, 0, 117 ) . '…' : $content ),
+				self::photo_thumbnails( $id ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts.
 				$controls // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts above.
 			);
 		}
@@ -456,6 +469,27 @@ class BFBT_Batch_View {
 
 			echo '</p>';
 		}
+	}
+
+	/**
+	 * Each photo of an entry as a thumbnail linking to the full image, in
+	 * the order they were attached; '' for an entry without any.
+	 */
+	private static function photo_thumbnails( int $log_id ): string {
+		$html = '';
+
+		foreach ( BFBT_Photos::for_log( $log_id ) as $attachment_id ) {
+			$full  = wp_get_attachment_url( $attachment_id );
+			$thumb = wp_get_attachment_image( $attachment_id, [ 48, 48 ], false, [ 'class' => 'bfbt-photo-thumb', 'loading' => 'lazy' ] );
+
+			if ( ! is_string( $full ) || '' === $full || '' === $thumb ) {
+				continue;
+			}
+
+			$html .= sprintf( '<a href="%s" class="bfbt-photo" target="_blank" rel="noopener">%s</a>', esc_url( $full ), $thumb );
+		}
+
+		return $html;
 	}
 
 	/**

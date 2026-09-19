@@ -106,7 +106,7 @@ Every write is a form post (or a nonced link) to `admin-post.php`.
 | Action | Nonce | Capability |
 |---|---|---|
 | `bfbt_save_batch` | `bfbt_add_batch` or `bfbt_edit_batch_{id}` | `edit_posts` |
-| `bfbt_add_log` | `bfbt_add_log_{batch}` | `edit_posts` |
+| `bfbt_add_log` (multipart; up to five images as `photos[]`) | `bfbt_add_log_{batch}` | `edit_posts` |
 | `bfbt_save_task` | `bfbt_add_task_{batch}` | `edit_posts` |
 | `bfbt_complete_task`, `bfbt_uncomplete_task` | `bfbt_complete_task_{id}` | `edit_posts` |
 | `bfbt_pin_og` | `bfbt_pin_og_{batch}` | `edit_posts` |
@@ -120,7 +120,8 @@ Every write is a form post (or a nonced link) to `admin-post.php`.
 `bfbt_batch`, `bfbt_log` (parent: batch), `bfbt_task` (parent: batch);
 `bfbt_style` (hierarchical) and `bfbt_vessel` on batches. None is public, shown
 in the UI, or exposed to REST. All use `capability_type => 'post'` with
-`map_meta_cap`.
+`map_meta_cap`. An entry's photos are core `attachment` posts whose parent is
+the entry; `BFBT_Photos` deletes them on `before_delete_post` of the entry.
 
 ## Extension reference
 
@@ -171,6 +172,11 @@ BFBT_Log::trash( int $log_id ): true|WP_Error
 BFBT_Log::pin_as_og( int $batch_id, int $log_id ): true|WP_Error
 BFBT_Log::latest_gravity( int $batch_id ): ?array
 BFBT_Log::for_batch( int $batch_id, int $page = 1, int $per_page = 50 ): array
+BFBT_Photos::split( mixed $files ): array                 // $_FILES['photos'] → one array per file
+BFBT_Photos::too_many( array $list ): ?WP_Error            // more than BFBT_Photos::MAX (5)
+BFBT_Photos::attach( int $log_id, array $list ): array     // ['ids' => int[], 'errors' => string[]]
+BFBT_Photos::for_log( int $log_id ): int[]                 // attachment ids, oldest first
+BFBT_Photos::urls( int $log_id ): string[]
 BFBT_Task::create( int $batch_id, array $data ): int|WP_Error
 BFBT_Task::complete( int $task_id ): int|WP_Error
 BFBT_Task::uncomplete( int $task_id ): true|WP_Error

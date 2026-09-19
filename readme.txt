@@ -161,6 +161,7 @@ No.
 * Temperatures follow the display-unit setting and carry their own unit: a °C / °F select beside the field, opening on the setting's unit, and the unit you pick is the one stored. A reading is checked and refused in the unit you typed it in (−10 to 60 °C, 14 to 140 °F); 74 typed as °C is refused with a hint towards °F rather than converted. The timeline shows the value as typed and, under the other setting, the conversion beside it — "74 °F (23.3 °C)". The CSV export gains a temp_entered column.
 * Every unit select in the admin opens on the setting's unit. The setting's choices now read "US (gallons, ounces, °F)" and "Metric (litres, grams, °C)".
 * A refused save keeps what you typed: every admin form comes back filled, the refused value included, and the entry form reopens on the type you submitted. Kept for thirty seconds in a per-user transient that uninstall sweeps; no new option.
+* Photos on an entry: attach up to five images when you add an entry. They go into the media library against that entry, show as thumbnails in a new Photos column of the timeline, and are named by URL in the CSV. A file that is not an image is refused by name while the entry is kept; more than five refuses the entry. Deleting an entry permanently deletes its photos; trashing and uninstall keep them.
 
 = 1.0.0 =
 * Compatibility: tested against WordPress 7.1.

@@ -693,6 +693,19 @@ class BFBT_Batch_Admin {
 		$data['temp_c'] = self::post_text( 'temp_c' );
 		unset( $data['log_type'] );
 
+		// Photos are counted before anything is written, so an over-long
+		// set refuses the whole save; they are stored after, so a photo that
+		// fails does not lose the reading. A browser never re-fills a file
+		// input, so a refused form comes back with every field but these.
+		// phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified above.
+		$photos   = BFBT_Photos::split( $_FILES[ BFBT_Photos::FIELD ] ?? [] );
+		$too_many = BFBT_Photos::too_many( $photos );
+
+		if ( $too_many ) {
+			self::remember_input( 'log', $typed );
+			self::redirect_with_notice( [ 'error', $too_many->get_error_message() ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
+		}
+
 		$result = BFBT_Log::create( $batch_id, $data );
 
 		if ( is_wp_error( $result ) ) {
@@ -700,7 +713,44 @@ class BFBT_Batch_Admin {
 			self::redirect_with_notice( [ 'error', $result->get_error_message() ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
 		}
 
-		self::redirect_with_notice( [ 'updated', __( 'Entry added.', 'bluefairy-brew-tracker' ) ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
+		self::redirect_with_notice( self::entry_added_notice( BFBT_Photos::attach( $result, $photos ) ), [ 'view' => 'view', 'batch_id' => $batch_id ] );
+	}
+
+	/**
+	 * "Entry added." — with its photo count, and with every photo that was
+	 * not saved named, because the entry exists either way.
+	 *
+	 * @param  array{ids: int[], errors: string[]} $outcome From BFBT_Photos::attach().
+	 * @return array{0: string, 1: string} [ 'updated' | 'error', message ]
+	 */
+	public static function entry_added_notice( array $outcome ): array {
+		$saved  = count( $outcome['ids'] );
+		$errors = $outcome['errors'];
+
+		if ( ! $errors ) {
+			return [
+				'updated',
+				$saved > 0
+					/* translators: %d: how many photos were saved with the entry */
+					? sprintf( _n( 'Entry added with %d photo.', 'Entry added with %d photos.', $saved, 'bluefairy-brew-tracker' ), $saved )
+					: __( 'Entry added.', 'bluefairy-brew-tracker' ),
+			];
+		}
+
+		return [
+			'error',
+			sprintf(
+				/* translators: 1: how many photos were not saved, 2: each failure as “file”: reason */
+				_n(
+					'Entry added, but %1$d photo was not saved. %2$s',
+					'Entry added, but %1$d photos were not saved. %2$s',
+					count( $errors ),
+					'bluefairy-brew-tracker'
+				),
+				count( $errors ),
+				implode( ' ', $errors )
+			),
+		];
 	}
 
 	public static function trash_log(): void {
