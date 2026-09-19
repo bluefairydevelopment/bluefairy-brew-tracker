@@ -1,11 +1,14 @@
 # Changelog
 
-## [1.0.3] — unreleased
+## [1.0.3] — 2026-09-19
 
 ### Fixed
 - The grey example in the Ingredient, SG and pH boxes (entry and task forms)
   read like a typed value — "Fermaid-O" looked filled in and the save answered
   "An addition needs an ingredient." Every example now reads "e.g. …".
+
+### Changed
+- Compatibility: tested against WordPress 7.1.
 
 ## [1.0.2] — 2026-09-19
 

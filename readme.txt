@@ -4,7 +4,7 @@ Tags: mead, wine, cider, homebrew, beer, fermentation, brewing log
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -158,6 +158,7 @@ No.
 == Changelog ==
 
 = 1.0.3 =
+* Compatibility: tested against WordPress 7.1.
 * The grey examples in the Ingredient, SG and pH boxes now read "e.g. Fermaid-O", "e.g. 1.090", "e.g. 3.4" so they are not mistaken for a typed value.
 
 = 1.0.2 =
