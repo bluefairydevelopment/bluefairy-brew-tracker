@@ -13,6 +13,9 @@
   last cell, before Trash. The timeline shows an *edited* mark, with the time
   of the edit as its tooltip, on an entry that was rewritten.
 
+### Changed
+- Compatibility: tested against WordPress 7.1.
+
 ## [1.0.1] — 2026-09-19
 
 ### Changed

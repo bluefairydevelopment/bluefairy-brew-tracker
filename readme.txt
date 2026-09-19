@@ -4,7 +4,7 @@ Tags: mead, wine, cider, homebrew, beer, fermentation, brewing log
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -158,6 +158,7 @@ No.
 == Changelog ==
 
 = 1.0.2 =
+* Compatibility: tested against WordPress 7.1.
 * An entry rewritten by an add-on (Brew Tracker Pro's Edit control) shows an "edited" mark on the timeline with the time of the edit. Entries stay immutable in this plugin. For add-ons: BFBT_Log::update() and the bfbt_log_row_controls filter.
 
 = 1.0.1 =
