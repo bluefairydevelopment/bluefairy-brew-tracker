@@ -90,4 +90,63 @@ final class UnitsTest extends TestCase {
 
 		$this->assertSame( 'metric', BFBT_Units::setting() );
 	}
+
+	// ---- temperature ----
+
+	public function test_74_fahrenheit_is_23_3_celsius_and_back(): void {
+		$celsius = BFBT_Units::to_celsius( 74.0, 'f' );
+
+		$this->assertEqualsWithDelta( 23.333, $celsius, 1e-3 );
+		$this->assertSame( 23.3, round( $celsius, 1 ) );
+		$this->assertEqualsWithDelta( 74.0, BFBT_Units::from_celsius( $celsius, 'f' ), 1e-9 );
+	}
+
+	public function test_minus_10_celsius_is_14_fahrenheit_and_back(): void {
+		$this->assertEqualsWithDelta( 14.0, BFBT_Units::from_celsius( -10.0, 'f' ), 1e-9 );
+		$this->assertEqualsWithDelta( -10.0, BFBT_Units::to_celsius( 14.0, 'f' ), 1e-9 );
+		$this->assertEqualsWithDelta( 140.0, BFBT_Units::from_celsius( 60.0, 'f' ), 1e-9 );
+	}
+
+	public function test_celsius_passes_through_unchanged(): void {
+		$this->assertSame( 20.5, BFBT_Units::to_celsius( 20.5, 'c' ) );
+		$this->assertSame( 20.5, BFBT_Units::from_celsius( 20.5, 'c' ) );
+	}
+
+	public function test_the_temperature_unit_follows_the_setting_and_its_filter(): void {
+		$this->assertSame( 'f', BFBT_Units::temperature_unit() );
+		$this->assertSame( 'gal', BFBT_Units::volume_unit() );
+		$this->assertSame( 'oz', BFBT_Units::mass_unit() );
+
+		$GLOBALS['bfbt_options']['bfbt_units'] = 'metric';
+
+		$this->assertSame( 'c', BFBT_Units::temperature_unit() );
+		$this->assertSame( 'l', BFBT_Units::volume_unit() );
+		$this->assertSame( 'g', BFBT_Units::mass_unit() );
+
+		$GLOBALS['bfbt_filters']['bfbt_units'] = static fn( string $s ): string => 'us';
+
+		$this->assertSame( 'f', BFBT_Units::temperature_unit() );
+	}
+
+	public function test_display_temperature_is_one_place_with_a_trailing_zero_dropped(): void {
+		// US: 23.333 °C is 74 °F, printed without the .0.
+		$this->assertSame( '74 °F', BFBT_Units::display_temperature( 23.3333333 ) );
+		$this->assertSame( '68.9 °F', BFBT_Units::display_temperature( 20.5 ) );
+
+		$GLOBALS['bfbt_options']['bfbt_units'] = 'metric';
+
+		$this->assertSame( '23.3 °C', BFBT_Units::display_temperature( 23.3333333 ) );
+		$this->assertSame( '20 °C', BFBT_Units::display_temperature( 20.0 ) );
+		$this->assertSame( '-10 °C', BFBT_Units::display_temperature( -10.0 ) );
+	}
+
+	public function test_format_temperature_names_the_unit_it_is_given(): void {
+		$this->assertSame( '74 °F', BFBT_Units::format_temperature( 74.0, 'f' ) );
+		$this->assertSame( '74.3 °F', BFBT_Units::format_temperature( 74.25, 'f' ) );
+		$this->assertSame( '20 °C', BFBT_Units::format_temperature( 20.0, 'c' ) );
+		$this->assertSame( '°F', BFBT_Units::temperature_label( 'f' ) );
+		$this->assertSame( '°C', BFBT_Units::temperature_label( 'c' ) );
+		$this->assertTrue( BFBT_Units::is_temperature_unit( 'f' ) );
+		$this->assertFalse( BFBT_Units::is_temperature_unit( 'k' ) );
+	}
 }

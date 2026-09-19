@@ -23,6 +23,8 @@ function bfbt_reset_stubs(): void {
 	$GLOBALS['bfbt_term_meta']    = [];
 	$GLOBALS['bfbt_next_id']      = 100;
 	$GLOBALS['bfbt_insert_fails'] = false;
+	$GLOBALS['bfbt_transients']   = [];
+	$GLOBALS['bfbt_user_id']      = 1;
 }
 
 bfbt_reset_stubs();
@@ -584,4 +586,35 @@ if ( ! isset( $GLOBALS['wpdb'] ) ) {
 			return 1;
 		}
 	};
+}
+
+/*
+ * ---------------------------------------------------------------------------
+ * Transients and the current user, for the remembered-input store.
+ * ---------------------------------------------------------------------------
+ */
+
+if ( ! function_exists( 'get_current_user_id' ) ) {
+	function get_current_user_id() { return (int) ( $GLOBALS['bfbt_user_id'] ?? 0 ); }
+}
+
+if ( ! function_exists( 'set_transient' ) ) {
+	function set_transient( $name, $value, $expiration = 0 ) {
+		$GLOBALS['bfbt_transients'][ $name ] = $value;
+
+		return true;
+	}
+}
+
+if ( ! function_exists( 'get_transient' ) ) {
+	function get_transient( $name ) { return $GLOBALS['bfbt_transients'][ $name ] ?? false; }
+}
+
+if ( ! function_exists( 'delete_transient' ) ) {
+	function delete_transient( $name ) {
+		$existed = isset( $GLOBALS['bfbt_transients'][ $name ] );
+		unset( $GLOBALS['bfbt_transients'][ $name ] );
+
+		return $existed;
+	}
 }

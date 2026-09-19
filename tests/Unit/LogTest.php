@@ -52,6 +52,61 @@ final class LogTest extends TestCase {
 		$this->assertSame( 'Smells of apples', $GLOBALS['bfbt_posts'][ $note ]['post_title'] );
 	}
 
+	public function test_a_fahrenheit_reading_stores_celsius_and_the_text_as_typed(): void {
+		$id = BFBT_Log::create( $this->batch, [ 'type' => 'temperature', 'temp' => '74', 'temp_unit' => 'f' ] );
+
+		$this->assertIsInt( $id );
+		$this->assertSame( '23.3', $GLOBALS['bfbt_meta'][ $id ]['_bfbt_temp_c'] );
+		$this->assertSame( '74 °F', $GLOBALS['bfbt_meta'][ $id ]['_bfbt_temp_entered'] );
+		$this->assertSame( '74 °F', $GLOBALS['bfbt_posts'][ $id ]['post_title'] );
+
+		$gravity = BFBT_Log::create( $this->batch, [ 'type' => 'gravity', 'sg' => '1.042', 'temp' => '68', 'temp_unit' => 'F' ] );
+		$this->assertSame( '20.0', $GLOBALS['bfbt_meta'][ $gravity ]['_bfbt_temp_c'] );
+		$this->assertSame( '68 °F', $GLOBALS['bfbt_meta'][ $gravity ]['_bfbt_temp_entered'] );
+		$this->assertSame( 'SG 1.042 @ 68 °F', $GLOBALS['bfbt_posts'][ $gravity ]['post_title'] );
+	}
+
+	public function test_a_celsius_reading_keeps_its_unit_and_temp_c_still_means_celsius(): void {
+		$c = BFBT_Log::create( $this->batch, [ 'type' => 'temperature', 'temp' => '20.0', 'temp_unit' => 'c' ] );
+		$this->assertSame( '20.0', $GLOBALS['bfbt_meta'][ $c ]['_bfbt_temp_c'] );
+		$this->assertSame( '20 °C', $GLOBALS['bfbt_meta'][ $c ]['_bfbt_temp_entered'] );
+		$this->assertSame( '20 °C', $GLOBALS['bfbt_posts'][ $c ]['post_title'] );
+
+		// The key a caller that already has °C uses — the Pro front-end form.
+		$GLOBALS['bfbt_options']['bfbt_units'] = 'us';
+		$legacy = BFBT_Log::create( $this->batch, [ 'type' => 'temperature', 'temp_c' => '20' ] );
+		$this->assertSame( '20.0', $GLOBALS['bfbt_meta'][ $legacy ]['_bfbt_temp_c'] );
+		$this->assertSame( '20 °C', $GLOBALS['bfbt_meta'][ $legacy ]['_bfbt_temp_entered'] );
+	}
+
+	public function test_a_temperature_without_a_unit_takes_the_settings_unit(): void {
+		$GLOBALS['bfbt_options']['bfbt_units'] = 'us';
+		$us = BFBT_Log::create( $this->batch, [ 'type' => 'temperature', 'temp' => '74' ] );
+		$this->assertSame( '23.3', $GLOBALS['bfbt_meta'][ $us ]['_bfbt_temp_c'] );
+		$this->assertSame( '74 °F', $GLOBALS['bfbt_meta'][ $us ]['_bfbt_temp_entered'] );
+
+		$GLOBALS['bfbt_options']['bfbt_units'] = 'metric';
+		$metric = BFBT_Log::create( $this->batch, [ 'type' => 'temperature', 'temp' => '20' ] );
+		$this->assertSame( '20.0', $GLOBALS['bfbt_meta'][ $metric ]['_bfbt_temp_c'] );
+		$this->assertSame( '20 °C', $GLOBALS['bfbt_meta'][ $metric ]['_bfbt_temp_entered'] );
+	}
+
+	public function test_a_fahrenheit_reading_out_of_range_is_refused_in_fahrenheit_and_nothing_is_written(): void {
+		$result = BFBT_Log::create( $this->batch, [ 'type' => 'temperature', 'temp' => '200', 'temp_unit' => 'f' ] );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertStringContainsString( '“200” is outside the temperature range this plugin accepts (14 to 140 °F).', $result->get_error_message() );
+		$this->assertCount( 1, $GLOBALS['bfbt_posts'] );
+	}
+
+	public function test_temperature_text_and_the_entered_unit(): void {
+		$this->assertSame( '74 °F', BFBT_Log::temperature_text( [ 'temp_entered' => '74 °F', 'temp_c' => '23.3' ] ) );
+		$this->assertSame( '20 °C', BFBT_Log::temperature_text( [ 'temp_entered' => '', 'temp_c' => '20.0' ] ) );
+		$this->assertSame( 'f', BFBT_Log::entered_temperature_unit( '74 °F' ) );
+		$this->assertSame( 'c', BFBT_Log::entered_temperature_unit( '20 °C' ) );
+		$this->assertSame( 'c', BFBT_Log::entered_temperature_unit( '' ) );
+	}
+
 	public function test_time_is_validated_and_goes_in_post_date(): void {
 		$bad = BFBT_Log::create( $this->batch, [ 'type' => 'note', 'note' => 'x', 'time' => '18/09/2026 10:00' ] );
 		$this->assertInstanceOf( WP_Error::class, $bad );

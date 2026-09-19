@@ -30,6 +30,7 @@ class BFBT_Log {
 		'unit'         => '_bfbt_unit',
 		'sg'           => '_bfbt_sg',
 		'temp_c'       => '_bfbt_temp_c',
+		'temp_entered' => '_bfbt_temp_entered',
 		'ph'           => '_bfbt_ph',
 		'volume_out_l' => '_bfbt_volume_out_l',
 		'task_id'      => '_bfbt_task_id',
@@ -94,10 +95,15 @@ class BFBT_Log {
 	 *
 	 * Accepted keys: type (required), time ("Y-m-d H:i", default now), note,
 	 * and per type — addition: ingredient (required), qty, unit; gravity: sg
-	 * (required), temp_c; temperature: temp_c (required); ph: ph (required);
-	 * racking: volume_out (litres) or volume_out + volume_out_unit; stage:
-	 * label; task_id on any. Anything refused is quoted back; nothing is
-	 * written.
+	 * (required) and an optional temperature; temperature: a temperature
+	 * (required); ph: ph (required); racking: volume_out (litres) or
+	 * volume_out + volume_out_unit; stage: label; task_id on any.
+	 *
+	 * A temperature is `temp` + `temp_unit` ('c' or 'f'; when the unit is
+	 * absent the display setting's unit applies), or `temp_c` for a value
+	 * already in °C. It is stored in °C as _bfbt_temp_c and, as typed, in
+	 * _bfbt_temp_entered ("74 °F"), which is what the timeline shows.
+	 * Anything refused is quoted back; nothing is written.
 	 *
 	 * @param  array<string, mixed> $data
 	 * @return int|WP_Error
@@ -416,13 +422,13 @@ class BFBT_Log {
 				$title = 'SG ' . $clean['sg'];
 
 				if ( '' !== $clean['temp_c'] ) {
-					$title .= ' @ ' . self::trim_number( $clean['temp_c'] ) . ' °C';
+					$title .= ' @ ' . self::temperature_text( $clean );
 				}
 
 				return $title;
 
 			case 'temperature':
-				return self::trim_number( $clean['temp_c'] ) . ' °C';
+				return self::temperature_text( $clean );
 
 			case 'ph':
 				return 'pH ' . $clean['ph'];
@@ -456,6 +462,28 @@ class BFBT_Log {
 
 				return mb_strlen( $text ) > 60 ? mb_substr( $text, 0, 57 ) . '…' : $text;
 		}
+	}
+
+	/**
+	 * The temperature as the maker typed it — "74 °F" — or, for an entry
+	 * that carries only the stored °C, that value in °C.
+	 *
+	 * @param array<string, mixed> $clean Keys temp_entered and temp_c.
+	 */
+	public static function temperature_text( array $clean ): string {
+		$entered = (string) ( $clean['temp_entered'] ?? '' );
+
+		return '' !== $entered
+			? $entered
+			: self::trim_number( (string) ( $clean['temp_c'] ?? '' ) ) . ' °C';
+	}
+
+	/**
+	 * The unit a stored temperature was typed in, read off its entered text:
+	 * 'f' for "74 °F", else 'c'.
+	 */
+	public static function entered_temperature_unit( string $entered ): string {
+		return str_ends_with( $entered, '°F' ) ? BFBT_Units::FAHRENHEIT : BFBT_Units::CELSIUS;
 	}
 
 	/**
@@ -500,6 +528,7 @@ class BFBT_Log {
 			'unit'         => '',
 			'sg'           => '',
 			'temp_c'       => '',
+			'temp_entered' => '',
 			'ph'           => '',
 			'volume_out_l' => '',
 			'task_id'      => '',
@@ -552,13 +581,30 @@ class BFBT_Log {
 		}
 
 		if ( 'gravity' === $type || 'temperature' === $type ) {
-			$temp = BFBT_Validate::temperature_c( (string) ( $data['temp_c'] ?? '' ), 'gravity' === $type );
+			$typed = trim( (string) ( $data['temp'] ?? '' ) );
+			$unit  = strtolower( trim( (string) ( $data['temp_unit'] ?? '' ) ) );
+
+			if ( '' === $typed && '' !== trim( (string) ( $data['temp_c'] ?? '' ) ) ) {
+				// A caller that already has °C — the Pro front-end form, say.
+				$typed = trim( (string) $data['temp_c'] );
+				$unit  = BFBT_Units::CELSIUS;
+			}
+
+			if ( '' === $unit ) {
+				$unit = BFBT_Units::temperature_unit();
+			}
+
+			$temp = BFBT_Validate::temperature( $typed, $unit, 'gravity' === $type );
 
 			if ( is_wp_error( $temp ) ) {
 				return $temp;
 			}
 
 			$clean['temp_c'] = $temp;
+
+			if ( '' !== $temp ) {
+				$clean['temp_entered'] = BFBT_Units::format_temperature( (float) $typed, $unit );
+			}
 		}
 
 		if ( 'ph' === $type ) {

@@ -68,8 +68,9 @@ is itself a LIKE wildcard. Every option is deleted by its literal name.
 - **"Unlimited batches."** The list is paged at twenty-five in the database.
   Advertising the absence of a limit invites the reader to imagine one.
 - **That anything of the maker's is removed on uninstall.** Free's uninstall
-  deletes `bfbt_features`, `bfbt_units`, `bfbt_seeded`, its notice
-  transients and the `bfbt_style_children` hierarchy cache core keeps. Pro's uninstall deletes recipes and the ingredient taxonomy —
+  deletes `bfbt_features`, `bfbt_units`, `bfbt_seeded`, its per-user
+  transients (the notice and a refused form's remembered input) and the
+  `bfbt_style_children` hierarchy cache core keeps. Pro's uninstall deletes recipes and the ingredient taxonomy —
   its own — and nothing of free's. Batches, entries, tasks, styles and vessels
   stay in both cases.
 - **Per-batch assignment or ownership.** Version 1 is one shared logbook: any

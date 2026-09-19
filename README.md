@@ -65,10 +65,13 @@ register the post types, the taxonomies, or any meta key of its own.
 
 | Option | Values | Default | Governs |
 |---|---|---|---|
-| `bfbt_units` | `us`, `metric` | `us` | how a *derived* volume is shown (a batch size: "1.00 gal" or "3.79 l"). A logged quantity is always shown in the unit that was typed. |
+| `bfbt_units` | `us`, `metric` | `us` | how a *derived* volume is shown (a batch size: "1.00 gal" or "3.79 l"), the unit each form's select opens on (`us`: gal, oz, °F; `metric`: l, g, °C), and the unit a stored temperature is converted to beside its entered value. A logged quantity or temperature is always shown in the unit that was typed. |
 
+The radios read "US (gallons, ounces, °F)" and "Metric (litres, grams, °C)".
 Anything else stored under `bfbt_units` reads as `us`. The value can be
-overridden at read time through the `bfbt_units` filter.
+overridden at read time through the `bfbt_units` filter; `BFBT_Units::
+temperature_unit()`, `volume_unit()` and `mass_unit()` answer from the
+filtered value.
 
 ### Other options
 
@@ -79,9 +82,11 @@ overridden at read time through the `bfbt_units` filter.
 | `bfbt_style_children` | WordPress core | the cached parent/child map core keeps for every hierarchical taxonomy |
 
 All four are deleted on uninstall, by literal name; core rebuilds the last
-one when the taxonomy is next registered and read. The one-shot admin notice
-is a transient, `bfbt_notice_{user_id}`, that expires in thirty seconds and is
-swept on uninstall.
+one when the taxonomy is next registered and read. Two per-user transients,
+both thirty seconds and both swept on uninstall: `bfbt_notice_{user_id}`, the
+one-shot admin notice, and `bfbt_form_{user_id}`, a refused form's input,
+written by `BFBT_Batch_Admin::remember_input()` and read back — once — by
+`old()` so the form comes back filled.
 
 ### Capabilities
 
@@ -175,8 +180,24 @@ BFBT_Stage::get( int $batch_id ): string
 BFBT_Stage::order(): string[]
 BFBT_ABV::from_gravities( float $og, float $fg ): float
 BFBT_ABV::attenuation( float $og, float $fg ): float
+BFBT_Units::setting(): string                       // 'us' or 'metric', filtered
+BFBT_Units::temperature_unit(): string              // 'f' or 'c' from the setting
+BFBT_Units::volume_unit(): string                   // 'gal' or 'l'
+BFBT_Units::mass_unit(): string                     // 'oz' or 'g'
+BFBT_Units::to_celsius( float $value, string $unit ): float
+BFBT_Units::from_celsius( float $celsius, string $unit ): float
+BFBT_Units::format_temperature( float $value, string $unit ): string   // "74 °F"
+BFBT_Units::display_temperature( float $celsius ): string             // in the setting's unit
+BFBT_Validate::temperature( string $value, string $unit, bool $allow_empty = false ): string|WP_Error   // °C
+BFBT_Validate::temperature_c( string $value, bool $allow_empty = false ): string|WP_Error              // the °C case
+BFBT_Batch_Admin::remember_input( string $form, array $fields ): void   // before redirecting on a refusal
+BFBT_Batch_Admin::old( string $form, string $key, string $default = '' ): string   // what the form reads back
 bfbt_plugin(): string   // the version; Pro compares it with its MIN_BASE
 ```
+
+`BFBT_Log::create()` takes a temperature as `temp` + `temp_unit` (`'c'` or
+`'f'`; absent, the setting's unit) or as `temp_c` already in °C. It stores
+`_bfbt_temp_c` and `_bfbt_temp_entered` ("74 °F"), and the CSV exports both.
 
 ## Development
 

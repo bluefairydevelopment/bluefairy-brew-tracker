@@ -157,6 +157,11 @@ No.
 
 == Changelog ==
 
+= 1.0.1 =
+* Temperatures follow the display-unit setting and carry their own unit: a °C / °F select beside the field, opening on the setting's unit, and the unit you pick is the one stored. A reading is checked and refused in the unit you typed it in (−10 to 60 °C, 14 to 140 °F); 74 typed as °C is refused with a hint towards °F rather than converted. The timeline shows the value as typed and, under the other setting, the conversion beside it — "74 °F (23.3 °C)". The CSV export gains a temp_entered column.
+* Every unit select in the admin opens on the setting's unit. The setting's choices now read "US (gallons, ounces, °F)" and "Metric (litres, grams, °C)".
+* A refused save keeps what you typed: every admin form comes back filled, the refused value included, and the entry form reopens on the type you submitted. Kept for thirty seconds in a per-user transient that uninstall sweeps; no new option.
+
 = 1.0.0 =
 * Compatibility: tested against WordPress 7.1.
 * First release: batches, a seeded style tree, vessels, an immutable timeline, pinned original gravity, ABV and attenuation with both formulas, an inline gravity chart, six derived stages, tasks with a Due panel and a Next due column, a paged list with Trash and Restore, display units, and a CSV export. Nothing of yours is removed on uninstall.

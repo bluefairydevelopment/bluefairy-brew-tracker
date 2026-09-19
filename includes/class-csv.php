@@ -28,7 +28,7 @@ class BFBT_CSV {
 
 	public const BATCH_COLUMNS = [ 'batch_id', 'name', 'style', 'vessel', 'stage', 'started', 'volume_l', 'volume_entered', 'target_og', 'target_fg', 'secondary_date', 'packaged_date', 'completed_date', 'dumped', 'notes' ];
 
-	public const LOG_COLUMNS = [ 'log_id', 'batch_id', 'batch', 'time', 'type', 'title', 'ingredient', 'qty', 'unit', 'sg', 'temp_c', 'ph', 'volume_out_l', 'note' ];
+	public const LOG_COLUMNS = [ 'log_id', 'batch_id', 'batch', 'time', 'type', 'title', 'ingredient', 'qty', 'unit', 'sg', 'temp_c', 'temp_entered', 'ph', 'volume_out_l', 'note' ];
 
 	/**
 	 * Send the headers and the file, then stop.
@@ -98,6 +98,7 @@ class BFBT_CSV {
 				BFBT_Log::field( $id, 'unit' ),
 				BFBT_Log::field( $id, 'sg' ),
 				BFBT_Log::field( $id, 'temp_c' ),
+				BFBT_Log::field( $id, 'temp_entered' ),
 				BFBT_Log::field( $id, 'ph' ),
 				BFBT_Log::field( $id, 'volume_out_l' ),
 				wp_strip_all_tags( (string) $post->post_content ),

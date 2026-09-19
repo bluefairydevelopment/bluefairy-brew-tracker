@@ -24,3 +24,6 @@ require_once __DIR__ . '/../includes/class-abv.php';
 require_once __DIR__ . '/../includes/class-chart.php';
 require_once __DIR__ . '/../includes/class-csv.php';
 require_once __DIR__ . '/../includes/class-batch-cascade.php';
+// The admin screen class is loaded for its remembered-input store; its
+// handlers and renderers are exercised by the E2E suite.
+require_once __DIR__ . '/../admin/class-batch-admin.php';

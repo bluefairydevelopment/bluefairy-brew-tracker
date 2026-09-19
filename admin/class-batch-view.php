@@ -240,6 +240,20 @@ class BFBT_Batch_View {
 	}
 
 	private static function entry_form( int $batch_id ): void {
+		$old      = static fn( string $key, string $default = '' ): string => BFBT_Batch_Admin::old( 'log', $key, $default );
+		$selected = $old( 'log_type', 'addition' );
+
+		// A fieldset the chosen type does not use is hidden and its inputs
+		// disabled, so two fieldsets can share a field name (temp on gravity
+		// and on temperature) and only the visible one posts. The script
+		// keeps this in step when the type changes.
+		$fieldset = static fn( string $type ): string => sprintf(
+			'<fieldset class="bfbt-type-fields%s" data-for="log" data-type="%s">',
+			$type === $selected ? ' bfbt-active' : '',
+			esc_attr( $type )
+		);
+		$disabled = static fn( string $type ): string => $type === $selected ? '' : ' disabled';
+
 		echo '<div class="bfbt-panel"><h2>' . esc_html__( 'Add entry', 'bluefairy-brew-tracker' ) . '</h2>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="bfbt-entry-form">';
 		wp_nonce_field( 'bfbt_add_log_' . $batch_id );
@@ -252,57 +266,79 @@ class BFBT_Batch_View {
 		$labels = BFBT_Log::type_labels();
 
 		foreach ( BFBT_Log::types() as $type ) {
-			printf( '<option value="%s">%s</option>', esc_attr( $type ), esc_html( $labels[ $type ] ?? ucfirst( str_replace( '_', ' ', $type ) ) ) );
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $type ), selected( $selected, $type, false ), esc_html( $labels[ $type ] ?? ucfirst( str_replace( '_', ' ', $type ) ) ) );
 		}
 
 		echo '</select> ';
 		printf(
 			'<label for="bfbt-log-time">%s</label> <input type="text" id="bfbt-log-time" name="time" value="%s" class="regular-text" placeholder="YYYY-MM-DD HH:MM"></p>',
 			esc_html__( 'When', 'bluefairy-brew-tracker' ),
-			esc_attr( wp_date( 'Y-m-d H:i' ) )
+			esc_attr( $old( 'time', wp_date( 'Y-m-d H:i' ) ) )
 		);
 
 		// Addition.
-		echo '<fieldset class="bfbt-type-fields" data-for="log" data-type="addition">';
-		printf( '<p><label>%s <input type="text" name="ingredient" class="regular-text" placeholder="%s"></label></p>', esc_html__( 'Ingredient', 'bluefairy-brew-tracker' ), esc_attr__( 'Fermaid-O', 'bluefairy-brew-tracker' ) );
-		printf( '<p><label>%s <input type="text" name="qty" class="small-text"></label> ', esc_html__( 'Quantity', 'bluefairy-brew-tracker' ) );
-		BFBT_Batch_Admin::unit_select( 'unit', 'g', BFBT_Validate::UNITS );
+		echo $fieldset( 'addition' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside the closure.
+		printf( '<p><label>%s <input type="text" name="ingredient" value="%s" class="regular-text" placeholder="%s"></label></p>', esc_html__( 'Ingredient', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ingredient' ) ), esc_attr__( 'Fermaid-O', 'bluefairy-brew-tracker' ) );
+		printf( '<p><label>%s <input type="text" name="qty" value="%s" class="small-text"></label> ', esc_html__( 'Quantity', 'bluefairy-brew-tracker' ), esc_attr( $old( 'qty' ) ) );
+		BFBT_Batch_Admin::unit_select( 'unit', $old( 'unit', BFBT_Units::mass_unit() ), BFBT_Validate::UNITS );
 		echo '</p></fieldset>';
 
+		$temp      = $old( 'temp' );
+		$temp_unit = $old( 'temp_unit', BFBT_Units::temperature_unit() );
+
 		// Gravity.
-		echo '<fieldset class="bfbt-type-fields" data-for="log" data-type="gravity">';
-		printf( '<p><label>%s <input type="text" name="sg" class="small-text" placeholder="1.090"></label> ', esc_html__( 'SG', 'bluefairy-brew-tracker' ) );
-		printf( '<label>%s <input type="text" name="temp_c" class="small-text"></label></p>', esc_html__( 'Temp °C (optional)', 'bluefairy-brew-tracker' ) );
-		echo '</fieldset>';
+		echo $fieldset( 'gravity' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		printf( '<p><label>%s <input type="text" name="sg" value="%s" class="small-text" placeholder="1.090"%s></label> ', esc_html__( 'SG', 'bluefairy-brew-tracker' ), esc_attr( $old( 'sg' ) ), $disabled( 'gravity' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a literal attribute.
+		printf( '<label>%s <input type="text" name="temp" value="%s" class="small-text"%s></label> ', esc_html__( 'Temp (optional)', 'bluefairy-brew-tracker' ), esc_attr( $temp ), $disabled( 'gravity' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		self::temperature_unit_select( $temp_unit, $disabled( 'gravity' ) );
+		echo '</p></fieldset>';
 
 		// Temperature.
-		echo '<fieldset class="bfbt-type-fields" data-for="log" data-type="temperature">';
-		printf( '<p><label>%s <input type="text" name="temp_c" class="small-text" disabled></label></p>', esc_html__( 'Temp °C', 'bluefairy-brew-tracker' ) );
-		echo '</fieldset>';
+		echo $fieldset( 'temperature' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		printf( '<p><label>%s <input type="text" name="temp" value="%s" class="small-text"%s></label> ', esc_html__( 'Temp', 'bluefairy-brew-tracker' ), esc_attr( $temp ), $disabled( 'temperature' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		self::temperature_unit_select( $temp_unit, $disabled( 'temperature' ) );
+		echo '</p></fieldset>';
 
 		// pH.
-		echo '<fieldset class="bfbt-type-fields" data-for="log" data-type="ph">';
-		printf( '<p><label>%s <input type="text" name="ph" class="small-text" placeholder="3.4"></label></p>', esc_html__( 'pH', 'bluefairy-brew-tracker' ) );
+		echo $fieldset( 'ph' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		printf( '<p><label>%s <input type="text" name="ph" value="%s" class="small-text" placeholder="3.4"></label></p>', esc_html__( 'pH', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ph' ) ) );
 		echo '</fieldset>';
 
 		// Racking.
-		echo '<fieldset class="bfbt-type-fields" data-for="log" data-type="racking">';
-		printf( '<p><label>%s <input type="text" name="volume_out" class="small-text"></label> ', esc_html__( 'Volume across (optional)', 'bluefairy-brew-tracker' ) );
-		BFBT_Batch_Admin::unit_select( 'volume_out_unit', 'gal', BFBT_Units::volume_units() );
+		echo $fieldset( 'racking' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		printf( '<p><label>%s <input type="text" name="volume_out" value="%s" class="small-text"></label> ', esc_html__( 'Volume across (optional)', 'bluefairy-brew-tracker' ), esc_attr( $old( 'volume_out' ) ) );
+		BFBT_Batch_Admin::unit_select( 'volume_out_unit', $old( 'volume_out_unit', BFBT_Units::volume_unit() ), BFBT_Units::volume_units() );
 		echo '</p></fieldset>';
 
 		// Stage.
-		echo '<fieldset class="bfbt-type-fields" data-for="log" data-type="stage">';
-		printf( '<p><label>%s <input type="text" name="label" class="regular-text"></label></p>', esc_html__( 'Label', 'bluefairy-brew-tracker' ) );
+		echo $fieldset( 'stage' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+		printf( '<p><label>%s <input type="text" name="label" value="%s" class="regular-text"></label></p>', esc_html__( 'Label', 'bluefairy-brew-tracker' ), esc_attr( $old( 'label' ) ) );
 		echo '</fieldset>';
 
-		printf( '<p><label for="bfbt-log-note">%s</label><br><textarea id="bfbt-log-note" name="note" rows="3" class="large-text"></textarea></p>', esc_html__( 'Note', 'bluefairy-brew-tracker' ) );
+		printf( '<p><label for="bfbt-log-note">%s</label><br><textarea id="bfbt-log-note" name="note" rows="3" class="large-text">%s</textarea></p>', esc_html__( 'Note', 'bluefairy-brew-tracker' ), esc_textarea( $old( 'note' ) ) );
 
 		submit_button( __( 'Add entry', 'bluefairy-brew-tracker' ), 'secondary', 'submit', false );
 		echo '</form></div>';
 	}
 
+	/**
+	 * The °C / °F select beside a temperature field. It opens on the unit
+	 * the display setting implies; the unit picked here is the one stored.
+	 */
+	private static function temperature_unit_select( string $selected, string $attributes = '' ): void {
+		printf( '<select name="temp_unit"%s>', $attributes ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a literal attribute.
+
+		foreach ( BFBT_Units::temperature_units() as $unit ) {
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $unit ), selected( $selected, $unit, false ), esc_html( BFBT_Units::temperature_label( $unit ) ) );
+		}
+
+		echo '</select>';
+	}
+
 	private static function task_form( int $batch_id ): void {
+		$old      = static fn( string $key, string $default = '' ): string => BFBT_Batch_Admin::old( 'task', $key, $default );
+		$selected = $old( 'task_type', 'addition' );
+
 		echo '<div class="bfbt-panel"><h2>' . esc_html__( 'Add task', 'bluefairy-brew-tracker' ) . '</h2>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="bfbt-task-form">';
 		wp_nonce_field( 'bfbt_add_task_' . $batch_id );
@@ -315,19 +351,19 @@ class BFBT_Batch_View {
 		$labels = BFBT_Task::type_labels();
 
 		foreach ( BFBT_Task::types() as $type ) {
-			printf( '<option value="%s">%s</option>', esc_attr( $type ), esc_html( $labels[ $type ] ?? ucfirst( str_replace( '_', ' ', $type ) ) ) );
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $type ), selected( $selected, $type, false ), esc_html( $labels[ $type ] ?? ucfirst( str_replace( '_', ' ', $type ) ) ) );
 		}
 
 		echo '</select></p>';
 
-		echo '<fieldset class="bfbt-type-fields" data-for="task" data-type="addition">';
-		printf( '<p><label>%s <input type="text" name="ingredient" class="regular-text" placeholder="%s"></label></p>', esc_html__( 'Ingredient', 'bluefairy-brew-tracker' ), esc_attr__( 'Fermaid-O', 'bluefairy-brew-tracker' ) );
-		printf( '<p><label>%s <input type="text" name="qty" class="small-text"></label> ', esc_html__( 'Quantity', 'bluefairy-brew-tracker' ) );
-		BFBT_Batch_Admin::unit_select( 'unit', 'g', BFBT_Validate::UNITS );
+		printf( '<fieldset class="bfbt-type-fields%s" data-for="task" data-type="addition">', 'addition' === $selected ? ' bfbt-active' : '' );
+		printf( '<p><label>%s <input type="text" name="ingredient" value="%s" class="regular-text" placeholder="%s"></label></p>', esc_html__( 'Ingredient', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ingredient' ) ), esc_attr__( 'Fermaid-O', 'bluefairy-brew-tracker' ) );
+		printf( '<p><label>%s <input type="text" name="qty" value="%s" class="small-text"></label> ', esc_html__( 'Quantity', 'bluefairy-brew-tracker' ), esc_attr( $old( 'qty' ) ) );
+		BFBT_Batch_Admin::unit_select( 'unit', $old( 'unit', BFBT_Units::mass_unit() ), BFBT_Validate::UNITS );
 		echo '</p><p class="description">' . esc_html__( 'Leave the quantity blank and put the instruction in the title — "water to 1 gal".', 'bluefairy-brew-tracker' ) . '</p></fieldset>';
 
-		printf( '<p><label>%s <input type="text" name="title" class="regular-text"></label></p>', esc_html__( 'Title (optional)', 'bluefairy-brew-tracker' ) );
-		printf( '<p><label>%s <input type="date" name="due"></label> <span class="description">%s</span></p>', esc_html__( 'Due', 'bluefairy-brew-tracker' ), esc_html__( 'Blank for a task with no date.', 'bluefairy-brew-tracker' ) );
+		printf( '<p><label>%s <input type="text" name="title" value="%s" class="regular-text"></label></p>', esc_html__( 'Title (optional)', 'bluefairy-brew-tracker' ), esc_attr( $old( 'title' ) ) );
+		printf( '<p><label>%s <input type="date" name="due" value="%s"></label> <span class="description">%s</span></p>', esc_html__( 'Due', 'bluefairy-brew-tracker' ), esc_attr( $old( 'due' ) ), esc_html__( 'Blank for a task with no date.', 'bluefairy-brew-tracker' ) );
 
 		submit_button( __( 'Add task', 'bluefairy-brew-tracker' ), 'secondary', 'submit', false );
 		echo '</form></div>';
@@ -365,6 +401,8 @@ class BFBT_Batch_View {
 				$ingredient = BFBT_Log::field( $id, 'ingredient' );
 				$title      = BFBT_Log::ingredient_label( $ingredient ) . substr( $title, strlen( $ingredient ) );
 			}
+
+			$title .= self::converted_temperature( $id );
 
 			$controls = '';
 
@@ -420,7 +458,29 @@ class BFBT_Batch_View {
 		}
 	}
 
+	/**
+	 * " (23.3 °C)" for an entry whose temperature was typed in a unit other
+	 * than the one the display setting implies; '' otherwise. The title
+	 * already carries the value as typed — that never changes — and this is
+	 * the same reading in the unit the maker now works in.
+	 */
+	private static function converted_temperature( int $log_id ): string {
+		$celsius = BFBT_Log::field( $log_id, 'temp_c' );
+
+		if ( '' === $celsius ) {
+			return '';
+		}
+
+		$entered_unit = BFBT_Log::entered_temperature_unit( BFBT_Log::field( $log_id, 'temp_entered' ) );
+
+		return $entered_unit === BFBT_Units::temperature_unit()
+			? ''
+			: ' (' . BFBT_Units::display_temperature( (float) $celsius ) . ')';
+	}
+
 	private static function milestones( int $batch_id ): void {
+		$old = static fn( string $key, string $default = '' ): string => BFBT_Batch_Admin::old( 'milestones', $key, $default );
+
 		echo '<div class="bfbt-panel"><h2>' . esc_html__( 'Milestones', 'bluefairy-brew-tracker' ) . '</h2>';
 		echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		wp_nonce_field( 'bfbt_edit_batch_' . $batch_id );
@@ -436,13 +496,13 @@ class BFBT_Batch_View {
 				'<p><label for="bfbt-%1$s">%2$s</label><br><input type="date" id="bfbt-%1$s" name="%1$s" value="%3$s"></p>',
 				esc_attr( $field ),
 				esc_html( $label ),
-				esc_attr( (string) BFBT_Batch::get( $batch_id, $field ) )
+				esc_attr( $old( $field, (string) BFBT_Batch::get( $batch_id, $field ) ) )
 			);
 		}
 
 		printf(
 			'<p><label><input type="checkbox" name="dumped" value="1"%s> %s</label></p>',
-			checked( '' !== (string) BFBT_Batch::get( $batch_id, 'dumped' ), true, false ),
+			checked( '' !== $old( 'dumped', (string) BFBT_Batch::get( $batch_id, 'dumped' ) ), true, false ),
 			esc_html__( 'Dumped', 'bluefairy-brew-tracker' )
 		);
 

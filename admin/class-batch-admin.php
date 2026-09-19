@@ -158,11 +158,85 @@ class BFBT_Batch_Admin {
 
 		delete_transient( 'bfbt_notice_' . get_current_user_id() );
 
+		// The bfbt-notice class marks this as the plugin's own notice, so a
+		// test (or a style) can tell it from another plugin's on the same page.
 		printf(
-			'<div class="notice notice-%s is-dismissible"><p>%s</p></div>',
+			'<div class="notice notice-%s is-dismissible bfbt-notice"><p>%s</p></div>',
 			esc_attr( 'error' === $notice[0] ? 'error' : 'success' ),
 			esc_html( (string) $notice[1] )
 		);
+	}
+
+	/*
+	 * ----------------------------------------------------------------------
+	 * A refused save keeps what was typed
+	 * ----------------------------------------------------------------------
+	 *
+	 * A handler that refuses calls remember_input() before it redirects; the
+	 * form it lands on reads every field through old(), so the page comes
+	 * back filled — the refused value included, so the maker can see what
+	 * was wrong. The copy lives in a per-user transient beside the notice
+	 * and is deleted the first time a form reads it: a reload after that
+	 * is a fresh form. Add-ons that print their own fields (or their own
+	 * forms) use the same two calls.
+	 */
+
+	/** The remembered fields of this request, once read; null until then. */
+	private static ?array $remembered = null;
+
+	/**
+	 * Keep a sanitised copy of a refused form's fields for the next render.
+	 *
+	 * @param string                 $form   A name the form reads back with, e.g. 'log'.
+	 * @param array<string, string>  $fields Field name → value as posted (already unslashed).
+	 */
+	public static function remember_input( string $form, array $fields ): void {
+		$clean = [];
+
+		foreach ( $fields as $key => $value ) {
+			$key = sanitize_key( (string) $key );
+
+			if ( '' === $key || ! is_scalar( $value ) ) {
+				continue;
+			}
+
+			$clean[ $key ] = in_array( $key, [ 'note', 'notes' ], true )
+				? wp_kses_post( (string) $value )
+				: sanitize_text_field( (string) $value );
+		}
+
+		set_transient( 'bfbt_form_' . get_current_user_id(), [ 'form' => $form, 'fields' => $clean ], 30 );
+	}
+
+	/**
+	 * A remembered field of a refused form, or the default when nothing was
+	 * remembered for this form. The stored copy is deleted on first read.
+	 */
+	public static function old( string $form, string $key, string $default = '' ): string {
+		if ( null === self::$remembered ) {
+			$name   = 'bfbt_form_' . get_current_user_id();
+			$stored = get_transient( $name );
+
+			delete_transient( $name );
+
+			self::$remembered = is_array( $stored ) && isset( $stored['form'], $stored['fields'] ) && is_array( $stored['fields'] )
+				? [ 'form' => (string) $stored['form'], 'fields' => $stored['fields'] ]
+				: [ 'form' => '', 'fields' => [] ];
+		}
+
+		if ( self::$remembered['form'] !== $form || ! array_key_exists( $key, self::$remembered['fields'] ) ) {
+			return $default;
+		}
+
+		return (string) self::$remembered['fields'][ $key ];
+	}
+
+	/**
+	 * Drop the in-memory copy once the screen has rendered, so the next
+	 * request reads the store again.
+	 */
+	public static function forget_input(): void {
+		self::$remembered = null;
 	}
 
 	/*
@@ -192,6 +266,8 @@ class BFBT_Batch_Admin {
 		}
 
 		echo '</div>';
+
+		self::forget_input();
 	}
 
 	private static function render_list( string $status ): void {
@@ -227,17 +303,26 @@ class BFBT_Batch_Admin {
 
 	private static function render_form( int $batch_id ): void {
 		$editing = $batch_id > 0;
+		$form    = self::batch_form_name( $batch_id );
+		$old     = static fn( string $key, string $stored = '' ): string => self::old( $form, $key, $stored );
 
-		$name      = $editing ? get_the_title( $batch_id ) : '';
-		$notes     = $editing ? (string) get_post_field( 'post_content', $batch_id ) : '';
-		$style_id  = $editing ? BFBT_Batch::style_term_id( $batch_id ) : 0;
-		$vessel    = $editing ? BFBT_Batch::vessel_name( $batch_id ) : '';
-		$started   = $editing ? (string) BFBT_Batch::get( $batch_id, 'started' ) : '';
-		$target_og = $editing ? (string) BFBT_Batch::get( $batch_id, 'target_og' ) : '';
-		$target_fg = $editing ? (string) BFBT_Batch::get( $batch_id, 'target_fg' ) : '';
+		$name      = $old( 'name', $editing ? get_the_title( $batch_id ) : '' );
+		$notes     = $old( 'notes', $editing ? (string) get_post_field( 'post_content', $batch_id ) : '' );
+		$style_id  = (int) $old( 'style', (string) ( $editing ? BFBT_Batch::style_term_id( $batch_id ) : 0 ) );
+		$vessel    = $old( 'vessel', $editing ? BFBT_Batch::vessel_name( $batch_id ) : '' );
+		$started   = $old( 'started', $editing ? (string) BFBT_Batch::get( $batch_id, 'started' ) : '' );
+		$target_og = $old( 'target_og', $editing ? (string) BFBT_Batch::get( $batch_id, 'target_og' ) : '' );
+		$target_fg = $old( 'target_fg', $editing ? (string) BFBT_Batch::get( $batch_id, 'target_fg' ) : '' );
 
 		$entered = $editing ? (string) BFBT_Batch::get( $batch_id, 'volume_entered' ) : '';
-		[ $volume, $volume_unit ] = 1 === preg_match( '/^(\S+)\s+(\S+)$/', $entered, $m ) ? [ $m[1], $m[2] ] : [ '', 'gal' ];
+		[ $volume, $volume_unit ] = 1 === preg_match( '/^(\S+)\s+(\S+)$/', $entered, $m ) ? [ $m[1], $m[2] ] : [ '', BFBT_Units::volume_unit() ];
+		$volume      = $old( 'volume', $volume );
+		$volume_unit = $old( 'volume_unit', $volume_unit );
+
+		$vessel_new      = $old( 'vessel_new' );
+		$vessel_type     = $old( 'vessel_type' );
+		$vessel_capacity = $old( 'vessel_capacity' );
+		$capacity_unit   = $old( 'vessel_capacity_unit', BFBT_Units::volume_unit() );
 
 		printf(
 			'<h1>%s</h1>',
@@ -281,18 +366,19 @@ class BFBT_Batch_Admin {
 		echo '</select>';
 		echo '<p class="description">' . esc_html__( 'Or add a new vessel:', 'bluefairy-brew-tracker' ) . '</p>';
 		printf(
-			'<input type="text" name="vessel_new" class="regular-text" placeholder="%s"> ',
+			'<input type="text" name="vessel_new" value="%s" class="regular-text" placeholder="%s"> ',
+			esc_attr( $vessel_new ),
 			esc_attr__( 'Name, e.g. Carboy B', 'bluefairy-brew-tracker' )
 		);
 		echo '<select name="vessel_type"><option value="">' . esc_html__( 'type', 'bluefairy-brew-tracker' ) . '</option>';
 
 		foreach ( BFBT_Batch::VESSEL_TYPES as $type ) {
-			printf( '<option value="%s">%s</option>', esc_attr( $type ), esc_html( $type ) );
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $type ), selected( $vessel_type, $type, false ), esc_html( $type ) );
 		}
 
 		echo '</select> ';
-		printf( '<input type="text" name="vessel_capacity" class="small-text" placeholder="%s"> ', esc_attr__( 'capacity', 'bluefairy-brew-tracker' ) );
-		self::unit_select( 'vessel_capacity_unit', 'gal', BFBT_Units::volume_units() );
+		printf( '<input type="text" name="vessel_capacity" value="%s" class="small-text" placeholder="%s"> ', esc_attr( $vessel_capacity ), esc_attr__( 'capacity', 'bluefairy-brew-tracker' ) );
+		self::unit_select( 'vessel_capacity_unit', $capacity_unit, BFBT_Units::volume_units() );
 		echo '</td></tr>';
 
 		self::field( 'started', __( 'Started', 'bluefairy-brew-tracker' ), $started, 'date', __( 'The day the yeast went in. Leave blank for a batch you are planning.', 'bluefairy-brew-tracker' ) );
@@ -417,45 +503,63 @@ class BFBT_Batch_Admin {
 
 			$result = BFBT_Batch::update( $batch_id, $fields );
 
-			self::redirect_with_notice(
-				is_wp_error( $result )
-					? [ 'error', $result->get_error_message() ]
-					: [ 'updated', __( 'Milestones saved.', 'bluefairy-brew-tracker' ) ],
-				[ 'view' => 'view', 'batch_id' => $batch_id ]
-			);
+			if ( is_wp_error( $result ) ) {
+				self::remember_input( 'milestones', $fields );
+				self::redirect_with_notice( [ 'error', $result->get_error_message() ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
+			}
+
+			self::redirect_with_notice( [ 'updated', __( 'Milestones saved.', 'bluefairy-brew-tracker' ) ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
 		}
 
-		$fields = [
-			'name'        => self::post_text( 'name' ),
-			'style'       => self::post_text( 'style' ),
-			'started'     => self::post_text( 'started' ),
-			'volume'      => self::post_text( 'volume' ),
-			'volume_unit' => self::post_text( 'volume_unit' ),
-			'target_og'   => self::post_text( 'target_og' ),
-			'target_fg'   => self::post_text( 'target_fg' ),
+		// Every field as posted, kept whole for the form to refill on a refusal.
+		$typed = [
+			'name'                 => self::post_text( 'name' ),
+			'style'                => self::post_text( 'style' ),
+			'vessel'               => self::post_text( 'vessel' ),
+			'vessel_new'           => self::post_text( 'vessel_new' ),
+			'vessel_type'          => self::post_text( 'vessel_type' ),
+			'vessel_capacity'      => self::post_text( 'vessel_capacity' ),
+			'vessel_capacity_unit' => self::post_text( 'vessel_capacity_unit' ),
+			'started'              => self::post_text( 'started' ),
+			'volume'               => self::post_text( 'volume' ),
+			'volume_unit'          => self::post_text( 'volume_unit' ),
+			'target_og'            => self::post_text( 'target_og' ),
+			'target_fg'            => self::post_text( 'target_fg' ),
 			// phpcs:ignore WordPress.Security.NonceVerification.Missing -- verified above.
-			'notes'       => isset( $_POST['notes'] ) ? wp_kses_post( wp_unslash( (string) $_POST['notes'] ) ) : '',
+			'notes'                => isset( $_POST['notes'] ) ? wp_kses_post( wp_unslash( (string) $_POST['notes'] ) ) : '',
 		];
 
-		$new_vessel = self::post_text( 'vessel_new' );
+		$refuse = static function ( string $message ) use ( $typed, $batch_id ): void {
+			self::remember_input( self::batch_form_name( $batch_id ), $typed );
+			self::redirect_with_notice( [ 'error', $message ], self::form_args( $batch_id ) );
+		};
 
-		if ( '' !== $new_vessel ) {
-			$fields['vessel']      = $new_vessel;
-			$fields['vessel_type'] = self::post_text( 'vessel_type' );
+		$fields = [
+			'name'        => $typed['name'],
+			'style'       => $typed['style'],
+			'started'     => $typed['started'],
+			'volume'      => $typed['volume'],
+			'volume_unit' => $typed['volume_unit'],
+			'target_og'   => $typed['target_og'],
+			'target_fg'   => $typed['target_fg'],
+			'notes'       => $typed['notes'],
+		];
 
-			$capacity = self::post_text( 'vessel_capacity' );
+		if ( '' !== $typed['vessel_new'] ) {
+			$fields['vessel']      = $typed['vessel_new'];
+			$fields['vessel_type'] = $typed['vessel_type'];
 
-			if ( '' !== $capacity ) {
-				$litres = BFBT_Validate::volume( $capacity, self::post_text( 'vessel_capacity_unit' ) );
+			if ( '' !== $typed['vessel_capacity'] ) {
+				$litres = BFBT_Validate::volume( $typed['vessel_capacity'], $typed['vessel_capacity_unit'] );
 
 				if ( is_wp_error( $litres ) ) {
-					self::redirect_with_notice( [ 'error', $litres->get_error_message() ], self::form_args( $batch_id ) );
+					$refuse( $litres->get_error_message() );
 				}
 
 				$fields['vessel_capacity_l'] = number_format( $litres, 3, '.', '' );
 			}
 		} else {
-			$fields['vessel'] = self::post_text( 'vessel' );
+			$fields['vessel'] = $typed['vessel'];
 		}
 
 		/**
@@ -470,7 +574,7 @@ class BFBT_Batch_Admin {
 		$result = $batch_id > 0 ? BFBT_Batch::update( $batch_id, $fields ) : BFBT_Batch::create( $fields );
 
 		if ( is_wp_error( $result ) ) {
-			self::redirect_with_notice( [ 'error', $result->get_error_message() ], self::form_args( $batch_id ) );
+			$refuse( $result->get_error_message() );
 		}
 
 		$landed = $batch_id > 0 ? $batch_id : (int) $result;
@@ -486,6 +590,14 @@ class BFBT_Batch_Admin {
 	 */
 	private static function form_args( int $batch_id ): array {
 		return $batch_id > 0 ? [ 'view' => 'edit', 'batch_id' => $batch_id ] : [ 'view' => 'add' ];
+	}
+
+	/**
+	 * The name the add / edit form remembers its input under: one per batch,
+	 * so a refused edit of one batch never fills another's form.
+	 */
+	public static function batch_form_name( int $batch_id ): string {
+		return 'batch:' . $batch_id;
 	}
 
 	public static function trash_batch(): void {
@@ -558,14 +670,15 @@ class BFBT_Batch_Admin {
 			self::redirect_with_notice( [ 'error', __( 'Entries cannot be edited. Trash the entry and add it again.', 'bluefairy-brew-tracker' ) ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
 		}
 
-		$data = [
-			'type'            => self::post_text( 'log_type' ),
+		$typed = [
+			'log_type'        => self::post_text( 'log_type' ),
 			'time'            => self::post_text( 'time' ),
 			'ingredient'      => self::post_text( 'ingredient' ),
 			'qty'             => self::post_text( 'qty' ),
 			'unit'            => self::post_text( 'unit' ),
 			'sg'              => self::post_text( 'sg' ),
-			'temp_c'          => self::post_text( 'temp_c' ),
+			'temp'            => self::post_text( 'temp' ),
+			'temp_unit'       => self::post_text( 'temp_unit' ),
 			'ph'              => self::post_text( 'ph' ),
 			'volume_out'      => self::post_text( 'volume_out' ),
 			'volume_out_unit' => self::post_text( 'volume_out_unit' ),
@@ -574,14 +687,20 @@ class BFBT_Batch_Admin {
 			'note'            => isset( $_POST['note'] ) ? wp_kses_post( wp_unslash( (string) $_POST['note'] ) ) : '',
 		];
 
+		$data         = $typed;
+		$data['type'] = $typed['log_type'];
+		// A form that predates the unit select still posts temp_c, in °C.
+		$data['temp_c'] = self::post_text( 'temp_c' );
+		unset( $data['log_type'] );
+
 		$result = BFBT_Log::create( $batch_id, $data );
 
-		self::redirect_with_notice(
-			is_wp_error( $result )
-				? [ 'error', $result->get_error_message() ]
-				: [ 'updated', __( 'Entry added.', 'bluefairy-brew-tracker' ) ],
-			[ 'view' => 'view', 'batch_id' => $batch_id ]
-		);
+		if ( is_wp_error( $result ) ) {
+			self::remember_input( 'log', $typed );
+			self::redirect_with_notice( [ 'error', $result->get_error_message() ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
+		}
+
+		self::redirect_with_notice( [ 'updated', __( 'Entry added.', 'bluefairy-brew-tracker' ) ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
 	}
 
 	public static function trash_log(): void {
@@ -641,21 +760,23 @@ class BFBT_Batch_Admin {
 			self::redirect_with_notice( [ 'error', __( 'That batch no longer exists.', 'bluefairy-brew-tracker' ) ] );
 		}
 
-		$result = BFBT_Task::create( $batch_id, [
-			'type'       => self::post_text( 'task_type' ),
+		$typed = [
+			'task_type'  => self::post_text( 'task_type' ),
 			'title'      => self::post_text( 'title' ),
 			'due'        => self::post_text( 'due' ),
 			'ingredient' => self::post_text( 'ingredient' ),
 			'qty'        => self::post_text( 'qty' ),
 			'unit'       => self::post_text( 'unit' ),
-		] );
+		];
 
-		self::redirect_with_notice(
-			is_wp_error( $result )
-				? [ 'error', $result->get_error_message() ]
-				: [ 'updated', __( 'Task added.', 'bluefairy-brew-tracker' ) ],
-			[ 'view' => 'view', 'batch_id' => $batch_id ]
-		);
+		$result = BFBT_Task::create( $batch_id, [ 'type' => $typed['task_type'] ] + $typed );
+
+		if ( is_wp_error( $result ) ) {
+			self::remember_input( 'task', $typed );
+			self::redirect_with_notice( [ 'error', $result->get_error_message() ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
+		}
+
+		self::redirect_with_notice( [ 'updated', __( 'Task added.', 'bluefairy-brew-tracker' ) ], [ 'view' => 'view', 'batch_id' => $batch_id ] );
 	}
 
 	public static function complete_task(): void {

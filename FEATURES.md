@@ -56,17 +56,37 @@ quoted back. A refused save is never reported as a success.
   than reinterpreted into a reading you did not take.
 - **Quantities** are non-negative decimals with a dot. **Units** come from a fixed
   list: g, kg, oz, lb, ml, l, gal, tsp, tbsp, pkt, tablet, each.
-- **Temperature** is °C in −10 to 60; **pH** is 0 to 14.
+- **Temperature** is typed in °C or °F — a select beside the field, opening on
+  the unit your setting implies — and checked in that unit: −10 to 60 °C, or
+  14 to 140 °F. The refusal names the unit you typed in ("“200” is outside the
+  temperature range this plugin accepts (14 to 140 °F)"). A °C entry above 60
+  that reads like an ordinary °F number — 74, say — is refused with the hint
+  "If you meant Fahrenheit, pick °F next to the field or set your units to US
+  in Settings." It is never converted for you.
+- **pH** is 0 to 14.
 - **Volume** is a number and a volume unit (ml, l, gal) and must be more than
   zero.
+
+### Your input survives a refused save
+
+A refused save does not send you back to an empty form. Every admin form —
+add and edit batch, add entry, add task, milestones — comes back filled with
+what you typed, the refused value included so you can see what was wrong, and
+the entry form reopens on the type you submitted. The copy is kept for thirty
+seconds in a per-user transient beside the notice and dropped the first time
+the form reads it: a reload after that is a fresh form.
 
 ## Units
 
 Volumes are stored in litres, mass in grams, temperature in °C. One setting,
-**Display units** (US or metric), decides how a *derived* volume is shown — the
-batch size, say, appears as "1 gal (3.79 l)" in metric and "1 gal (1.00 gal)"
-in US. A quantity you logged is never converted: a 1.2 g Fermaid-O dose is
-shown as 1.2 g whatever the setting says.
+**Display units** — "US (gallons, ounces, °F)" or "Metric (litres, grams,
+°C)" — decides two things: how a *derived* volume is shown (the batch size,
+say, appears as "1 gal (3.79 l)" in metric and "1 gal (1.00 gal)" in US), and
+which unit every form offers first (gal, oz and °F under US; l, g and °C under
+metric). A value you logged is never converted: a 1.2 g Fermaid-O dose is
+shown as 1.2 g whatever the setting says, and a reading typed as 74 °F stays
+"74 °F" — under metric it reads "74 °F (23.3 °C)", the same reading in the unit
+you now work in. The unit you pick on the entry is the one that counts.
 
 ## The timeline
 
@@ -78,8 +98,8 @@ racking, stage.
 | Type | What it records | Generated title |
 |---|---|---|
 | Addition | ingredient as typed, quantity, unit | `Fermaid-O 1.2 g` |
-| Gravity | SG, and a temperature if you took one | `SG 1.042 @ 20 °C` |
-| Temperature | °C | `20 °C` |
+| Gravity | SG, and a temperature if you took one, in the unit you typed | `SG 1.042 @ 20 °C`, `SG 1.050 @ 68 °F` |
+| Temperature | °C or °F as typed; stored in °C as well | `74 °F` |
 | pH | pH | `pH 3.40` |
 | Racking | optionally the volume that came across | `Racked — 3.5 l across` |
 | Note | free text | the first sixty characters |
@@ -203,7 +223,8 @@ as text, not as a formula.
 ## Uninstall
 
 Uninstalling deletes `bfbt_features`, `bfbt_units`, `bfbt_seeded`, the
-plugin's one-shot notice transients, and `bfbt_style_children` — the cached
+plugin's per-user transients (the one-shot notice and a refused form's
+remembered input), and `bfbt_style_children` — the cached
 parent/child map WordPress itself keeps for the style taxonomy — never a batch,
 an entry, a task, a style or a vessel. There is no `LIKE 'bfbt_%'` sweep: that pattern would also match
 the Pro add-on's `bfbtp_` settings.

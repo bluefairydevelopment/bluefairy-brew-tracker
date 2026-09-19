@@ -238,6 +238,92 @@ final class ValidateTest extends TestCase {
 	public function test_an_empty_temperature_is_refused_unless_allowed(): void {
 		$this->assertInstanceOf( WP_Error::class, BFBT_Validate::temperature_c( '' ) );
 		$this->assertSame( '', BFBT_Validate::temperature_c( '', true ) );
+		$this->assertInstanceOf( WP_Error::class, BFBT_Validate::temperature( '', 'f' ) );
+		$this->assertSame( '', BFBT_Validate::temperature( '', 'f', true ) );
+	}
+
+	// ---- temperature in the unit it was typed in ----
+
+	public function test_a_fahrenheit_reading_is_returned_in_celsius(): void {
+		$this->assertSame( '23.3', BFBT_Validate::temperature( '74', 'f' ) );
+		$this->assertSame( '23.3', BFBT_Validate::temperature( '74', 'F' ) );
+		$this->assertSame( '20.0', BFBT_Validate::temperature( '68', 'f' ) );
+		$this->assertSame( '20.0', BFBT_Validate::temperature( '20', 'c' ) );
+	}
+
+	public function test_the_fahrenheit_boundaries_are_accepted(): void {
+		$this->assertSame( '-10.0', BFBT_Validate::temperature( '14', 'f' ) );
+		$this->assertSame( '60.0', BFBT_Validate::temperature( '140', 'f' ) );
+	}
+
+	public function test_one_degree_outside_the_fahrenheit_range_is_refused_with_the_fahrenheit_wording(): void {
+		foreach ( [ '13', '141' ] as $typed ) {
+			$result = BFBT_Validate::temperature( $typed, 'f' );
+
+			$this->assertRefusedQuoting( $result, $typed );
+			$this->assertStringContainsString( 'is outside the temperature range this plugin accepts (14 to 140 °F).', $result->get_error_message() );
+			$this->assertStringNotContainsString( '°C', $result->get_error_message() );
+			$this->assertStringNotContainsString( 'If you meant Fahrenheit', $result->get_error_message() );
+		}
+	}
+
+	public function test_a_celsius_refusal_names_the_celsius_range(): void {
+		$result = BFBT_Validate::temperature( '-10.1', 'c' );
+
+		$this->assertRefusedQuoting( $result, '-10.1' );
+		$this->assertStringContainsString( '(-10 to 60 °C).', $result->get_error_message() );
+		$this->assertStringNotContainsString( 'If you meant Fahrenheit', $result->get_error_message() );
+	}
+
+	/**
+	 * 74 typed as °C is almost certainly 74 °F. The value is refused — never
+	 * converted — and the notice points at the unit select and the setting.
+	 */
+	public function test_a_celsius_value_that_looks_like_fahrenheit_gets_the_hint(): void {
+		$result = BFBT_Validate::temperature( '74', 'c' );
+
+		$this->assertRefusedQuoting( $result, '74' );
+		$this->assertSame(
+			'“74” is outside the temperature range this plugin accepts (-10 to 60 °C). If you meant Fahrenheit, pick °F next to the field or set your units to US in Settings.',
+			$result->get_error_message()
+		);
+	}
+
+	public function test_the_fahrenheit_hint_is_not_given_where_it_does_not_apply(): void {
+		// In range: accepted, no message at all.
+		$this->assertSame( '20.0', BFBT_Validate::temperature( '20', 'c' ) );
+
+		// Above 140: not a Fahrenheit reading either.
+		$hot = BFBT_Validate::temperature( '500', 'c' );
+		$this->assertInstanceOf( WP_Error::class, $hot );
+		$this->assertStringNotContainsString( 'If you meant Fahrenheit', $hot->get_error_message() );
+
+		// The same number typed as °F is out of range on its own terms.
+		$f = BFBT_Validate::temperature( '500', 'f' );
+		$this->assertStringContainsString( '(14 to 140 °F)', $f->get_error_message() );
+	}
+
+	public function test_a_temperature_format_refusal_names_the_unit(): void {
+		$result = BFBT_Validate::temperature( 'warm', 'f' );
+
+		$this->assertRefusedQuoting( $result, 'warm' );
+		$this->assertStringContainsString( '20.5 °F', $result->get_error_message() );
+	}
+
+	public function test_a_temperature_unit_off_the_list_is_refused(): void {
+		$result = BFBT_Validate::temperature( '20', 'k' );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertSame( 'bfbt_temperature_unit', $result->get_error_code() );
+		$this->assertStringContainsString( '“k”', $result->get_error_message() );
+	}
+
+	public function test_temperature_c_is_the_celsius_case_of_temperature(): void {
+		$this->assertSame( BFBT_Validate::temperature( '20.5', 'c' ), BFBT_Validate::temperature_c( '20.5' ) );
+		$this->assertSame(
+			BFBT_Validate::temperature( '74', 'c' )->get_error_message(),
+			BFBT_Validate::temperature_c( '74' )->get_error_message()
+		);
 	}
 
 	// ---- pH ----

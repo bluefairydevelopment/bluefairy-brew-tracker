@@ -20,8 +20,13 @@ class BFBT_Validate {
 	public const GRAVITY_MIN = 0.980;
 	public const GRAVITY_MAX = 1.200;
 
+	/** °C bounds. */
 	public const TEMP_MIN = -10.0;
 	public const TEMP_MAX = 60.0;
+
+	/** °F bounds: the same range, so a reading is checked in the unit it was typed in. */
+	public const TEMP_F_MIN = 14.0;
+	public const TEMP_F_MAX = 140.0;
 
 	public const PH_MIN = 0.0;
 	public const PH_MAX = 14.0;
@@ -182,44 +187,85 @@ class BFBT_Validate {
 	}
 
 	/**
-	 * A temperature in °C, −10…60.
+	 * A temperature typed in °C or °F, returned in °C.
 	 *
-	 * @return string|WP_Error One decimal place.
+	 * The range is checked in the unit the maker typed in — −10…60 °C or
+	 * 14…140 °F — and the refusal names that unit, so "200" typed as °F is
+	 * told about 140 °F, not 60 °C. A °C entry above 60 that would be an
+	 * ordinary °F reading gets a hint towards the unit select and the
+	 * setting; nothing is ever reinterpreted.
+	 *
+	 * @param  string $unit 'c' or 'f' (case-insensitive).
+	 * @return string|WP_Error °C to one decimal place, e.g. "23.3"; '' when empty is allowed.
 	 */
-	public static function temperature_c( string $value, bool $allow_empty = false ): string|WP_Error {
+	public static function temperature( string $value, string $unit, bool $allow_empty = false ): string|WP_Error {
 		$value = trim( $value );
+		$unit  = strtolower( trim( $unit ) );
+
+		if ( ! BFBT_Units::is_temperature_unit( $unit ) ) {
+			return new WP_Error(
+				'bfbt_temperature_unit',
+				sprintf(
+					/* translators: %s: the unit given */
+					__( '“%s” is not a temperature unit this plugin accepts. Use °C or °F.', 'bluefairy-brew-tracker' ),
+					trim( $unit )
+				)
+			);
+		}
 
 		if ( '' === $value ) {
 			return $allow_empty ? '' : new WP_Error( 'bfbt_temperature_required', __( 'A temperature is required.', 'bluefairy-brew-tracker' ) );
 		}
 
+		$label = BFBT_Units::temperature_label( $unit );
+
 		if ( 1 !== preg_match( '/^-?\d+(\.\d+)?$/', $value ) ) {
 			return new WP_Error(
 				'bfbt_temperature_format',
 				sprintf(
-					/* translators: %s: the value the user typed */
-					__( '“%s” is not a temperature this plugin can read. Enter degrees Celsius as a number, for example 20.5.', 'bluefairy-brew-tracker' ),
-					$value
+					/* translators: 1: the value the user typed, 2: °C or °F */
+					__( '“%1$s” is not a temperature this plugin can read. Enter degrees as a number, for example 20.5 %2$s.', 'bluefairy-brew-tracker' ),
+					$value,
+					$label
 				)
 			);
 		}
 
 		$number = (float) $value;
 
-		if ( $number < self::TEMP_MIN || $number > self::TEMP_MAX ) {
-			return new WP_Error(
-				'bfbt_temperature_range',
-				sprintf(
-					/* translators: 1: the value the user typed, 2: lowest accepted, 3: highest accepted */
-					__( '“%1$s” is outside the temperature range this plugin accepts (%2$s to %3$s °C).', 'bluefairy-brew-tracker' ),
-					$value,
-					number_format( self::TEMP_MIN, 0, '.', '' ),
-					number_format( self::TEMP_MAX, 0, '.', '' )
-				)
+		[ $min, $max ] = BFBT_Units::FAHRENHEIT === $unit
+			? [ self::TEMP_F_MIN, self::TEMP_F_MAX ]
+			: [ self::TEMP_MIN, self::TEMP_MAX ];
+
+		if ( $number < $min || $number > $max ) {
+			$message = sprintf(
+				/* translators: 1: the value the user typed, 2: lowest accepted, 3: highest accepted, 4: °C or °F */
+				__( '“%1$s” is outside the temperature range this plugin accepts (%2$s to %3$s %4$s).', 'bluefairy-brew-tracker' ),
+				$value,
+				number_format( $min, 0, '.', '' ),
+				number_format( $max, 0, '.', '' ),
+				$label
 			);
+
+			// 74 typed as °C is almost certainly 74 °F. Say so; do not convert.
+			if ( BFBT_Units::CELSIUS === $unit && $number > self::TEMP_MAX && $number <= self::TEMP_F_MAX ) {
+				$message .= ' ' . __( 'If you meant Fahrenheit, pick °F next to the field or set your units to US in Settings.', 'bluefairy-brew-tracker' );
+			}
+
+			return new WP_Error( 'bfbt_temperature_range', $message );
 		}
 
-		return number_format( $number, 1, '.', '' );
+		return number_format( BFBT_Units::to_celsius( $number, $unit ), 1, '.', '' );
+	}
+
+	/**
+	 * A temperature typed in °C, −10…60. Kept for callers that predate the
+	 * unit select; the same as temperature( $value, 'c', $allow_empty ).
+	 *
+	 * @return string|WP_Error One decimal place.
+	 */
+	public static function temperature_c( string $value, bool $allow_empty = false ): string|WP_Error {
+		return self::temperature( $value, BFBT_Units::CELSIUS, $allow_empty );
 	}
 
 	/**

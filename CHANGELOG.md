@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.0.1] — unreleased
+
+### Added
+- Temperatures follow the display-unit setting and carry their own unit. The
+  entry form's temperature field has a °C / °F select that opens on the
+  setting's unit (US → °F, metric → °C); the unit picked on the entry is the
+  one that counts, as it already is for quantities. A reading is checked in
+  the unit it was typed in — −10…60 °C or 14…140 °F — and refused in that
+  unit: "“200” is outside the temperature range this plugin accepts (14 to
+  140 °F)". A °C entry above 60 that would be an ordinary °F reading is
+  refused with the hint "If you meant Fahrenheit, pick °F next to the field or
+  set your units to US in Settings." Nothing is ever converted for you.
+- The stored value stays °C in `_bfbt_temp_c`; the text as typed is kept in
+  `_bfbt_temp_entered` ("74 °F"). Titles and timeline rows show the entered
+  value and, when the setting's unit differs, the converted value in brackets:
+  "74 °F (23.3 °C)". The CSV export gains a `temp_entered` column after
+  `temp_c`.
+- `BFBT_Units::temperature_unit()`, `volume_unit()`, `mass_unit()` (the unit
+  each form offers first, from the setting), `to_celsius()`, `from_celsius()`,
+  `format_temperature()`, `display_temperature()`; `BFBT_Validate::temperature(
+  $value, $unit, $allow_empty )`, with `temperature_c()` kept as its °C case.
+  `BFBT_Log::create()` takes `temp` + `temp_unit` and still accepts `temp_c`.
+- Every unit select in the admin — batch volume, vessel capacity, quantity,
+  racking volume, temperature — opens on the setting's unit instead of a fixed
+  one. The Settings radios read "US (gallons, ounces, °F)" and "Metric (litres,
+  grams, °C)".
+
+### Fixed
+- A refused save no longer sends you back to an empty form. Every admin form —
+  add and edit batch, add entry, add task, milestones — comes back filled with
+  what was typed, the refused value included so you can see what was wrong,
+  and the entry form reopens on the type that was submitted. The copy lives in
+  a per-user transient, `bfbt_form_{user_id}`, for thirty seconds beside the
+  notice and is deleted the first time the form reads it; uninstall sweeps it
+  with the notice transients. The option set is unchanged.
+  `BFBT_Batch_Admin::remember_input()` and `old()` are public for add-ons that
+  print their own fields.
+
 ## [1.0.0] — 2026-09-18
 
 ### Changed

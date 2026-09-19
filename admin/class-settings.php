@@ -49,9 +49,9 @@ class BFBT_Settings {
 		echo '<input type="hidden" name="action" value="bfbt_save_settings">';
 		echo '<table class="form-table" role="presentation"><tbody>';
 		echo '<tr><th scope="row">' . esc_html__( 'Display units', 'bluefairy-brew-tracker' ) . '</th><td>';
-		printf( '<label><input type="radio" name="units" value="us"%s> %s</label><br>', checked( $units, BFBT_Units::US, false ), esc_html__( 'US (gallons, pounds)', 'bluefairy-brew-tracker' ) );
-		printf( '<label><input type="radio" name="units" value="metric"%s> %s</label>', checked( $units, BFBT_Units::METRIC, false ), esc_html__( 'Metric (litres, grams)', 'bluefairy-brew-tracker' ) );
-		echo '<p class="description">' . esc_html__( 'Governs derived volumes only — a batch size, say. A quantity you logged is always shown in the unit you typed.', 'bluefairy-brew-tracker' ) . '</p>';
+		printf( '<label><input type="radio" name="units" value="us"%s> %s</label><br>', checked( $units, BFBT_Units::US, false ), esc_html__( 'US (gallons, ounces, °F)', 'bluefairy-brew-tracker' ) );
+		printf( '<label><input type="radio" name="units" value="metric"%s> %s</label>', checked( $units, BFBT_Units::METRIC, false ), esc_html__( 'Metric (litres, grams, °C)', 'bluefairy-brew-tracker' ) );
+		echo '<p class="description">' . esc_html__( 'Governs derived volumes — a batch size, say — and the unit each form offers first. A quantity or temperature you logged is always shown in the unit you typed, with the other unit beside it.', 'bluefairy-brew-tracker' ) . '</p>';
 		echo '</td></tr></tbody></table>';
 		submit_button( __( 'Save settings', 'bluefairy-brew-tracker' ) );
 		echo '</form>';
