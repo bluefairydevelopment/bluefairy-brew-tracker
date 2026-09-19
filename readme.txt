@@ -4,7 +4,7 @@ Tags: mead, wine, cider, homebrew, beer, fermentation, brewing log
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -158,6 +158,7 @@ No.
 == Changelog ==
 
 = 1.0.1 =
+* Compatibility: tested against WordPress 7.1.
 * Temperatures follow the display-unit setting and carry their own unit: a °C / °F select beside the field, opening on the setting's unit, and the unit you pick is the one stored. A reading is checked and refused in the unit you typed it in (−10 to 60 °C, 14 to 140 °F); 74 typed as °C is refused with a hint towards °F rather than converted. The timeline shows the value as typed and, under the other setting, the conversion beside it — "74 °F (23.3 °C)". The CSV export gains a temp_entered column.
 * Every unit select in the admin opens on the setting's unit. The setting's choices now read "US (gallons, ounces, °F)" and "Metric (litres, grams, °C)".
 * A refused save keeps what you typed: every admin form comes back filled, the refused value included, and the entry form reopens on the type you submitted. Kept for thirty seconds in a per-user transient that uninstall sweeps; no new option.

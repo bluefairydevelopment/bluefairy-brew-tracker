@@ -1,6 +1,9 @@
 # Changelog
 
-## [1.0.1] — unreleased
+## [1.0.1] — 2026-09-19
+
+### Changed
+- Compatibility: tested against WordPress 7.1.
 
 ### Added
 - Temperatures follow the display-unit setting and carry their own unit. The
