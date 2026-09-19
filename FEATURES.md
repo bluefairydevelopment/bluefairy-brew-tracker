@@ -105,9 +105,14 @@ racking, stage.
 | Note | free text | the first sixty characters |
 | Stage | a label | the label |
 
-**Entries are immutable.** There is no edit form and the handler refuses any
-posted entry id. A typo is trashed and re-entered, so a number on the batch
-screen can always be traced to the entry that produced it.
+**Entries are immutable in this plugin.** There is no edit form and the add
+handler refuses any posted entry id. A typo is trashed and re-entered, so a
+number on the batch screen can always be traced to the entry that produced it.
+Pro adds an **Edit** control on every row (fields, note, time and photos); an
+entry edited that way carries an *edited* mark with the time of the edit, so
+the trace still holds. The seam is `BFBT_Log::update()`, which runs the same
+validation as a new entry, never changes an entry's type or the task it
+completes, and stores `_bfbt_edited` / `_bfbt_edited_by`.
 
 The timeline shows fifty entries a page, newest first. Trash is offered only to
 users who may delete others' posts.
@@ -260,6 +265,8 @@ the Pro add-on's `bfbtp_` settings.
 | `bfbt_batch_created`, `bfbt_batch_updated`, `bfbt_log_created`, `bfbt_task_completed` | react to a change |
 | `bfbt_batch_form_fields`, `bfbt_batch_form_submit` | add fields to the add/edit form and read them back |
 | `bfbt_batch_actions` | add buttons to the batch screen |
+| `bfbt_log_row_controls` | add controls at the start of a timeline row's last cell (Pro's Edit link) |
+| `bfbt_log_updated` | react to an entry rewritten through `BFBT_Log::update()` |
 | `bfbt_after_batch_list`, `bfbt_settings_after` | add content below the list and the settings |
 | `bfbt_admin_menu` | add pages under the Brew Tracker menu |
 | `bfbt_ingredient_label` | resolve an ingredient typed as text |
@@ -295,6 +302,7 @@ Pro column describes Brew Tracker Pro 1.0.
 | Vessel taxonomy with type and capacity | Yes | Yes |
 | Timeline log per batch: additions, gravity, temperature, pH, notes, racking | Yes | Yes |
 | Up to five photos on an entry, thumbnails on the timeline | Yes | Yes |
+| Edit a timeline entry in place: fields, note, time, photos | Yes | — |
 | ABV and attenuation from the pinned OG and the latest reading, both formulas stated | Yes | Yes |
 | Gravity chart per batch, inline SVG | Yes | Yes |
 | Six-stage cycle: planned, primary, secondary, packaged, complete, dumped | Yes, extended | Yes |

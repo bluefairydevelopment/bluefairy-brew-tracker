@@ -34,7 +34,12 @@ class BFBT_Log {
 		'ph'           => '_bfbt_ph',
 		'volume_out_l' => '_bfbt_volume_out_l',
 		'task_id'      => '_bfbt_task_id',
+		'edited'       => '_bfbt_edited',
+		'edited_by'    => '_bfbt_edited_by',
 	];
+
+	/** The fields update() rewrites; type and task_id are fixed for the life of an entry. */
+	private const EDITABLE = [ 'ingredient', 'qty', 'unit', 'sg', 'temp_c', 'temp_entered', 'ph', 'volume_out_l' ];
 
 	/**
 	 * @return string[]
@@ -158,6 +163,81 @@ class BFBT_Log {
 		do_action( 'bfbt_log_created', $log_id, $batch_id, $clean );
 
 		return $log_id;
+	}
+
+	/**
+	 * Rewrite an entry in place.
+	 *
+	 * This plugin's own screens never call this: on the free plugin entries
+	 * are immutable and the add handler refuses a posted entry id. It is the
+	 * seam an add-on's Edit screen uses, so that an edit goes through the
+	 * same validation as a new entry. The type and the task an entry
+	 * completes never change; everything else — time, note, and the fields
+	 * of that type — is replaced by what is given, exactly as create() would
+	 * have read it. A field left empty is cleared. Photos are not touched.
+	 *
+	 * The entry is marked: `_bfbt_edited` (site time, "Y-m-d H:i:s") and
+	 * `_bfbt_edited_by` (user id), which the timeline shows, so a number on
+	 * the batch screen can still be traced to the entry — and to the fact
+	 * that the entry was changed after it was logged.
+	 *
+	 * @param  array<string, mixed> $data The same keys create() accepts; type is ignored.
+	 * @return true|WP_Error
+	 */
+	public static function update( int $log_id, array $data ): true|WP_Error {
+		if ( ! self::is_log( $log_id ) || 'trash' === get_post_status( $log_id ) ) {
+			return new WP_Error( 'bfbt_no_log', __( 'That entry no longer exists.', 'bluefairy-brew-tracker' ) );
+		}
+
+		$data['type']    = self::field( $log_id, 'type' );
+		$data['task_id'] = self::field( $log_id, 'task_id' );
+
+		$clean = self::validate( $data );
+
+		if ( is_wp_error( $clean ) ) {
+			return $clean;
+		}
+
+		$post_date = $clean['time'] . ':00';
+
+		$result = wp_update_post( [
+			'ID'            => $log_id,
+			'post_title'    => self::summary( $clean ),
+			'post_content'  => $clean['note'],
+			'post_date'     => $post_date,
+			'post_date_gmt' => get_gmt_from_date( $post_date ),
+		], true );
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
+
+		self::keep_published( $log_id );
+
+		foreach ( self::EDITABLE as $field ) {
+			if ( '' !== (string) $clean[ $field ] ) {
+				update_post_meta( $log_id, self::META[ $field ], $clean[ $field ] );
+			} else {
+				delete_post_meta( $log_id, self::META[ $field ] );
+			}
+		}
+
+		update_post_meta( $log_id, self::META['edited'], current_time( 'mysql' ) );
+		update_post_meta( $log_id, self::META['edited_by'], (string) get_current_user_id() );
+
+		$post     = get_post( $log_id );
+		$batch_id = $post ? (int) $post->post_parent : 0;
+
+		/**
+		 * Fires after an entry was rewritten in place.
+		 *
+		 * @param int                  $log_id
+		 * @param int                  $batch_id
+		 * @param array<string, string> $clean The validated fields as stored.
+		 */
+		do_action( 'bfbt_log_updated', $log_id, $batch_id, $clean );
+
+		return true;
 	}
 
 	/**

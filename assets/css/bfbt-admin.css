@@ -55,3 +55,5 @@
 .bfbt-photos { white-space: nowrap; }
 .bfbt-photo { display: inline-block; margin: 0 4px 2px 0; line-height: 0; }
 .bfbt-photo-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 3px; border: 1px solid #c3c4c7; }
+
+.bfbt-edited { font-size: .8em; color: #50575e; font-style: italic; }

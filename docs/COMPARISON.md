@@ -11,6 +11,7 @@ everything downstream. This file is byte-identical in both repositories.
 | Vessel taxonomy with type and capacity | yes | yes, inherited |
 | Timeline log per batch: additions, gravity, temperature, pH, notes, racking | yes | yes, inherited |
 | Up to five photos on an entry, thumbnails on the timeline, URLs in the CSV | yes | yes, inherited |
+| Edit a timeline entry in place: fields, note, time, photos, with an *edited* mark | — | yes |
 | ABV and attenuation from the pinned OG and the latest reading, both formulas stated | yes | yes, inherited |
 | Gravity chart per batch, inline SVG | yes | yes, inherited |
 | Six-stage cycle: planned, primary, secondary, packaged, complete, dumped | yes | extended |

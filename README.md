@@ -136,6 +136,7 @@ signature.
 | `bfbt_batch_created` | `int $batch_id, array $clean` | after `BFBT_Batch::create()` has written everything |
 | `bfbt_batch_updated` | `int $batch_id, array $clean` | after `BFBT_Batch::update()` |
 | `bfbt_log_created` | `int $log_id, int $batch_id, array $clean` | after `BFBT_Log::create()` |
+| `bfbt_log_updated` | `int $log_id, int $batch_id, array $clean` | after `BFBT_Log::update()` (an add-on's edit; this plugin never calls it) |
 | `bfbt_task_completed` | `int $task_id, int $batch_id, int $log_id` | once, on the open → done transition |
 | `bfbt_admin_menu` | `string $parent_slug` | after the top-level menu is registered (`bfbt-batches`) |
 | `bfbt_batch_form_fields` | `int $batch_id` (0 when adding) | inside the add/edit form, after the core rows |
@@ -158,6 +159,7 @@ signature.
 | `bfbt_units` | `string $setting` | `us` or `metric` |
 | `bfbt_ingredient_label` | `string $label, string $ingredient` | the display label for an ingredient typed as text |
 | `bfbt_batch_form_submit` | `array $fields, int $batch_id` | the fields about to be saved from the batch form |
+| `bfbt_log_row_controls` | `string $html, int $log_id, int $batch_id` | escaped HTML placed at the start of a timeline row's last cell, before Trash |
 
 ### Public API
 
@@ -168,6 +170,7 @@ BFBT_Batch::update( int $batch_id, array $data ): true|WP_Error
 BFBT_Batch::get( int $batch_id, string $field, mixed $fallback = '' ): mixed
 BFBT_Batch::set( int $batch_id, string $field, mixed $value ): bool
 BFBT_Log::create( int $batch_id, array $data ): int|WP_Error
+BFBT_Log::update( int $log_id, array $data ): true|WP_Error   // same keys as create(); type and task_id fixed; marks _bfbt_edited
 BFBT_Log::trash( int $log_id ): true|WP_Error
 BFBT_Log::pin_as_og( int $batch_id, int $log_id ): true|WP_Error
 BFBT_Log::latest_gravity( int $batch_id ): ?array

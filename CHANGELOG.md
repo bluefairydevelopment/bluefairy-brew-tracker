@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.0.2] — unreleased
+
+### Added
+- `BFBT_Log::update( $log_id, $data )`: rewrite an entry in place through the
+  same validation as a new one. The type and the task an entry completes never
+  change; a field left empty is cleared; photos are untouched; the entry is
+  marked `_bfbt_edited` / `_bfbt_edited_by` and `bfbt_log_updated` fires.
+  Nothing in this plugin calls it — entries stay immutable here — it is the
+  seam Pro's Edit screen uses.
+- `bfbt_log_row_controls` filter: controls at the start of a timeline row's
+  last cell, before Trash. The timeline shows an *edited* mark, with the time
+  of the edit as its tooltip, on an entry that was rewritten.
+
 ## [1.0.1] — 2026-09-19
 
 ### Changed

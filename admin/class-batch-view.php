@@ -418,6 +418,16 @@ class BFBT_Batch_View {
 
 			$controls = '';
 
+			/**
+			 * Controls at the start of a timeline row's last cell, before this
+			 * plugin's own. Pro adds its Edit link here. Return escaped HTML.
+			 *
+			 * @param string $html     Nothing, by default.
+			 * @param int    $log_id
+			 * @param int    $batch_id
+			 */
+			$controls .= (string) apply_filters( 'bfbt_log_row_controls', '', $id, $batch_id );
+
 			if ( 'gravity' === $type ) {
 				$controls .= $is_og
 					? '<span class="bfbt-og-pin">' . esc_html__( 'OG', 'bluefairy-brew-tracker' ) . '</span> '
@@ -443,11 +453,12 @@ class BFBT_Batch_View {
 			}
 
 			printf(
-				'<tr class="bfbt-entry bfbt-entry-%s"><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="bfbt-photos">%s</td><td class="bfbt-entry-controls">%s</td></tr>',
+				'<tr class="bfbt-entry bfbt-entry-%s"><td>%s</td><td>%s</td><td>%s%s</td><td>%s</td><td class="bfbt-photos">%s</td><td class="bfbt-entry-controls">%s</td></tr>',
 				esc_attr( sanitize_key( $type ) ),
 				esc_html( substr( (string) $entry->post_date, 0, 16 ) ),
 				esc_html( $labels[ $type ] ?? ucfirst( str_replace( '_', ' ', $type ) ) ),
 				esc_html( $title ),
+				self::edited_mark( $id ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside.
 				esc_html( mb_strlen( $content ) > 120 ? mb_substr( $content, 0, 117 ) . '…' : $content ),
 				self::photo_thumbnails( $id ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts.
 				$controls // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from escaped parts above.
@@ -469,6 +480,28 @@ class BFBT_Batch_View {
 
 			echo '</p>';
 		}
+	}
+
+	/**
+	 * " edited" after the title of an entry that was rewritten after it was
+	 * logged (an add-on's Edit screen; this plugin never rewrites one), with
+	 * when as the tooltip. '' for an entry as first logged.
+	 */
+	private static function edited_mark( int $log_id ): string {
+		$when = BFBT_Log::field( $log_id, 'edited' );
+
+		if ( '' === $when ) {
+			return '';
+		}
+
+		return sprintf(
+			' <span class="bfbt-edited" title="%s">%s</span>',
+			esc_attr(
+				/* translators: %s: date and time of the edit */
+				sprintf( __( 'Edited %s', 'bluefairy-brew-tracker' ), substr( $when, 0, 16 ) )
+			),
+			esc_html__( 'edited', 'bluefairy-brew-tracker' )
+		);
 	}
 
 	/**

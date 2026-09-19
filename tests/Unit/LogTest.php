@@ -236,4 +236,100 @@ final class LogTest extends TestCase {
 
 		$this->assertSame( 'Fermaid O (Lallemand)', BFBT_Log::ingredient_label( 'Fermaid-O' ) );
 	}
+
+	/* ---- update(): the seam an add-on's Edit screen uses ---------------- */
+
+	private function updated_actions(): array {
+		return array_values( array_filter( $GLOBALS['bfbt_actions'], static fn( array $a ): bool => 'bfbt_log_updated' === $a[0] ) );
+	}
+
+	public function test_update_rewrites_the_fields_title_note_and_time_and_marks_the_entry_edited(): void {
+		$id = BFBT_Log::create( $this->batch, [ 'type' => 'gravity', 'sg' => '1.042', 'temp' => '68', 'temp_unit' => 'f', 'note' => 'first', 'time' => '2026-09-10 10:00' ] );
+		$this->assertSame( 'SG 1.042 @ 68 °F', $GLOBALS['bfbt_posts'][ $id ]['post_title'] );
+		$GLOBALS['bfbt_user_id'] = 7;
+
+		$this->assertTrue( BFBT_Log::update( $id, [ 'sg' => '1.040', 'temp' => '20', 'temp_unit' => 'c', 'note' => 'corrected', 'time' => '2026-09-10 11:30' ] ) );
+
+		$post = $GLOBALS['bfbt_posts'][ $id ];
+		$this->assertSame( 'SG 1.040 @ 20 °C', $post['post_title'] );
+		$this->assertSame( 'corrected', $post['post_content'] );
+		$this->assertSame( '2026-09-10 11:30:00', $post['post_date'] );
+		$this->assertSame( '1.040', BFBT_Log::field( $id, 'sg' ) );
+		$this->assertSame( '20.0', BFBT_Log::field( $id, 'temp_c' ) );
+		$this->assertSame( '20 °C', BFBT_Log::field( $id, 'temp_entered' ) );
+		$this->assertSame( 'gravity', BFBT_Log::field( $id, 'type' ) );
+		$this->assertSame( '2026-09-18 12:00:00', BFBT_Log::field( $id, 'edited' ) );
+		$this->assertSame( '7', BFBT_Log::field( $id, 'edited_by' ) );
+
+		$fired = $this->updated_actions();
+		$this->assertCount( 1, $fired );
+		$this->assertSame( [ $id, $this->batch ], [ $fired[0][1][0], $fired[0][1][1] ] );
+		$this->assertSame( '1.040', $fired[0][1][2]['sg'] );
+	}
+
+	public function test_update_clears_a_field_left_empty(): void {
+		$id = BFBT_Log::create( $this->batch, [ 'type' => 'gravity', 'sg' => '1.042', 'temp' => '20', 'temp_unit' => 'c' ] );
+		$this->assertSame( '20.0', BFBT_Log::field( $id, 'temp_c' ) );
+
+		$this->assertTrue( BFBT_Log::update( $id, [ 'sg' => '1.042', 'temp' => '' ] ) );
+
+		$this->assertSame( '', BFBT_Log::field( $id, 'temp_c' ) );
+		$this->assertSame( '', BFBT_Log::field( $id, 'temp_entered' ) );
+		$this->assertArrayNotHasKey( '_bfbt_temp_c', $GLOBALS['bfbt_meta'][ $id ], 'deleted, not blanked' );
+		$this->assertSame( 'SG 1.042', $GLOBALS['bfbt_posts'][ $id ]['post_title'] );
+	}
+
+	public function test_update_keeps_the_type_and_the_task_whatever_is_posted(): void {
+		$task = BFBT_Task::create( $this->batch, [ 'type' => 'gravity' ] );
+		$id   = BFBT_Log::create( $this->batch, [ 'type' => 'gravity', 'sg' => '1.050', 'task_id' => $task ] );
+
+		$this->assertTrue( BFBT_Log::update( $id, [ 'type' => 'note', 'task_id' => '0', 'sg' => '1.048', 'note' => 'still a reading' ] ) );
+
+		$this->assertSame( 'gravity', BFBT_Log::field( $id, 'type' ) );
+		$this->assertSame( (string) $task, BFBT_Log::field( $id, 'task_id' ) );
+		$this->assertSame( 'SG 1.048', $GLOBALS['bfbt_posts'][ $id ]['post_title'] );
+	}
+
+	public function test_a_refused_update_changes_nothing_and_fires_nothing(): void {
+		$id     = BFBT_Log::create( $this->batch, [ 'type' => 'gravity', 'sg' => '1.042', 'note' => 'kept' ] );
+		$before = [ $GLOBALS['bfbt_posts'][ $id ], $GLOBALS['bfbt_meta'][ $id ] ];
+
+		$result = BFBT_Log::update( $id, [ 'sg' => '1090', 'note' => 'changed' ] );
+
+		$this->assertInstanceOf( WP_Error::class, $result );
+		$this->assertStringContainsString( '“1090” is not a specific gravity', $result->get_error_message() );
+		$this->assertSame( $before, [ $GLOBALS['bfbt_posts'][ $id ], $GLOBALS['bfbt_meta'][ $id ] ] );
+		$this->assertArrayNotHasKey( '_bfbt_edited', $GLOBALS['bfbt_meta'][ $id ] );
+		$this->assertSame( [], $this->updated_actions() );
+	}
+
+	public function test_update_refuses_a_batch_a_missing_id_and_a_trashed_entry(): void {
+		$id = BFBT_Log::create( $this->batch, [ 'type' => 'note', 'note' => 'x' ] );
+		wp_trash_post( $id );
+
+		foreach ( [ $this->batch, 999, $id ] as $bad ) {
+			$result = BFBT_Log::update( $bad, [ 'note' => 'y' ] );
+			$this->assertInstanceOf( WP_Error::class, $result );
+			$this->assertSame( 'bfbt_no_log', $result->get_error_code() );
+		}
+
+		$this->assertSame( 'x', $GLOBALS['bfbt_posts'][ $id ]['post_content'] );
+	}
+
+	public function test_update_leaves_the_photos_where_they_are(): void {
+		$id     = BFBT_Log::create( $this->batch, [ 'type' => 'note', 'note' => 'x' ] );
+		$photos = BFBT_Photos::attach( $id, [ [ 'name' => 'a.png', 'type' => 'image/png', 'tmp_name' => '/tmp/a', 'error' => UPLOAD_ERR_OK, 'size' => 1 ] ] )['ids'];
+
+		$this->assertTrue( BFBT_Log::update( $id, [ 'note' => 'y' ] ) );
+
+		$this->assertSame( $photos, BFBT_Photos::for_log( $id ) );
+	}
+
+	public function test_an_updated_entry_dated_ahead_stays_published(): void {
+		$id = BFBT_Log::create( $this->batch, [ 'type' => 'note', 'note' => 'x' ] );
+
+		$this->assertTrue( BFBT_Log::update( $id, [ 'note' => 'x', 'time' => '2026-09-19 12:00' ] ) );
+
+		$this->assertSame( 'publish', get_post_status( $id ) );
+	}
 }

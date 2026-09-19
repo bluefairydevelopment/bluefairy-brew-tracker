@@ -161,7 +161,15 @@ if ( ! function_exists( 'wp_update_post' ) ) {
 			return $wp_error ? new WP_Error( 'invalid_post', 'Invalid post ID.' ) : 0;
 		}
 
-		$GLOBALS['bfbt_posts'][ $id ] = $postarr + $GLOBALS['bfbt_posts'][ $id ];
+		$merged = $postarr + $GLOBALS['bfbt_posts'][ $id ];
+
+		// Core re-runs the future-date rule on update, exactly as on insert.
+		if ( 'publish' === ( $merged['post_status'] ?? 'publish' ) && isset( $postarr['post_date'] )
+			&& strtotime( $postarr['post_date'] ) - strtotime( $GLOBALS['bfbt_now'] ?? 'now' ) >= 60 ) {
+			$merged['post_status'] = 'future';
+		}
+
+		$GLOBALS['bfbt_posts'][ $id ] = $merged;
 
 		return $id;
 	}

@@ -157,6 +157,9 @@ No.
 
 == Changelog ==
 
+= 1.0.2 =
+* An entry rewritten by an add-on (Brew Tracker Pro's Edit control) shows an "edited" mark on the timeline with the time of the edit. Entries stay immutable in this plugin. For add-ons: BFBT_Log::update() and the bfbt_log_row_controls filter.
+
 = 1.0.1 =
 * Compatibility: tested against WordPress 7.1.
 * Temperatures follow the display-unit setting and carry their own unit: a °C / °F select beside the field, opening on the setting's unit, and the unit you pick is the one stored. A reading is checked and refused in the unit you typed it in (−10 to 60 °C, 14 to 140 °F); 74 typed as °C is refused with a hint towards °F rather than converted. The timeline shows the value as typed and, under the other setting, the conversion beside it — "74 °F (23.3 °C)". The CSV export gains a temp_entered column.
