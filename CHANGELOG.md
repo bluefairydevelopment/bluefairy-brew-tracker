@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.0.2] — unreleased
+## [1.0.2] — 2026-09-19
 
 ### Added
 - `BFBT_Log::update( $log_id, $data )`: rewrite an entry in place through the
