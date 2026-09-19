@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3] — unreleased
+
+### Fixed
+- The grey example in the Ingredient, SG and pH boxes (entry and task forms)
+  read like a typed value — "Fermaid-O" looked filled in and the save answered
+  "An addition needs an ingredient." Every example now reads "e.g. …".
+
 ## [1.0.2] — 2026-09-19
 
 ### Added

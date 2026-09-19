@@ -157,6 +157,9 @@ No.
 
 == Changelog ==
 
+= 1.0.3 =
+* The grey examples in the Ingredient, SG and pH boxes now read "e.g. Fermaid-O", "e.g. 1.090", "e.g. 3.4" so they are not mistaken for a typed value.
+
 = 1.0.2 =
 * Compatibility: tested against WordPress 7.1.
 * An entry rewritten by an add-on (Brew Tracker Pro's Edit control) shows an "edited" mark on the timeline with the time of the edit. Entries stay immutable in this plugin. For add-ons: BFBT_Log::update() and the bfbt_log_row_controls filter.

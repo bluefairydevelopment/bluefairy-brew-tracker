@@ -278,7 +278,7 @@ class BFBT_Batch_View {
 
 		// Addition.
 		echo $fieldset( 'addition' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped inside the closure.
-		printf( '<p><label>%s <input type="text" name="ingredient" value="%s" class="regular-text" placeholder="%s"></label></p>', esc_html__( 'Ingredient', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ingredient' ) ), esc_attr__( 'Fermaid-O', 'bluefairy-brew-tracker' ) );
+		printf( '<p><label>%s <input type="text" name="ingredient" value="%s" class="regular-text" placeholder="%s"></label></p>', esc_html__( 'Ingredient', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ingredient' ) ), esc_attr__( 'e.g. Fermaid-O', 'bluefairy-brew-tracker' ) );
 		printf( '<p><label>%s <input type="text" name="qty" value="%s" class="small-text"></label> ', esc_html__( 'Quantity', 'bluefairy-brew-tracker' ), esc_attr( $old( 'qty' ) ) );
 		BFBT_Batch_Admin::unit_select( 'unit', $old( 'unit', BFBT_Units::mass_unit() ), BFBT_Validate::UNITS );
 		echo '</p></fieldset>';
@@ -288,7 +288,7 @@ class BFBT_Batch_View {
 
 		// Gravity.
 		echo $fieldset( 'gravity' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		printf( '<p><label>%s <input type="text" name="sg" value="%s" class="small-text" placeholder="1.090"%s></label> ', esc_html__( 'SG', 'bluefairy-brew-tracker' ), esc_attr( $old( 'sg' ) ), $disabled( 'gravity' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a literal attribute.
+		printf( '<p><label>%s <input type="text" name="sg" value="%s" class="small-text" placeholder="e.g. 1.090"%s></label> ', esc_html__( 'SG', 'bluefairy-brew-tracker' ), esc_attr( $old( 'sg' ) ), $disabled( 'gravity' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a literal attribute.
 		printf( '<label>%s <input type="text" name="temp" value="%s" class="small-text"%s></label> ', esc_html__( 'Temp (optional)', 'bluefairy-brew-tracker' ), esc_attr( $temp ), $disabled( 'gravity' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		self::temperature_unit_select( $temp_unit, $disabled( 'gravity' ) );
 		echo '</p></fieldset>';
@@ -301,7 +301,7 @@ class BFBT_Batch_View {
 
 		// pH.
 		echo $fieldset( 'ph' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
-		printf( '<p><label>%s <input type="text" name="ph" value="%s" class="small-text" placeholder="3.4"></label></p>', esc_html__( 'pH', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ph' ) ) );
+		printf( '<p><label>%s <input type="text" name="ph" value="%s" class="small-text" placeholder="e.g. 3.4"></label></p>', esc_html__( 'pH', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ph' ) ) );
 		echo '</fieldset>';
 
 		// Racking.
@@ -369,7 +369,7 @@ class BFBT_Batch_View {
 		echo '</select></p>';
 
 		printf( '<fieldset class="bfbt-type-fields%s" data-for="task" data-type="addition">', 'addition' === $selected ? ' bfbt-active' : '' );
-		printf( '<p><label>%s <input type="text" name="ingredient" value="%s" class="regular-text" placeholder="%s"></label></p>', esc_html__( 'Ingredient', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ingredient' ) ), esc_attr__( 'Fermaid-O', 'bluefairy-brew-tracker' ) );
+		printf( '<p><label>%s <input type="text" name="ingredient" value="%s" class="regular-text" placeholder="%s"></label></p>', esc_html__( 'Ingredient', 'bluefairy-brew-tracker' ), esc_attr( $old( 'ingredient' ) ), esc_attr__( 'e.g. Fermaid-O', 'bluefairy-brew-tracker' ) );
 		printf( '<p><label>%s <input type="text" name="qty" value="%s" class="small-text"></label> ', esc_html__( 'Quantity', 'bluefairy-brew-tracker' ), esc_attr( $old( 'qty' ) ) );
 		BFBT_Batch_Admin::unit_select( 'unit', $old( 'unit', BFBT_Units::mass_unit() ), BFBT_Validate::UNITS );
 		echo '</p><p class="description">' . esc_html__( 'Leave the quantity blank and put the instruction in the title — "water to 1 gal".', 'bluefairy-brew-tracker' ) . '</p></fieldset>';
