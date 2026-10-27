@@ -1,5 +1,6 @@
 === BlueFairy Brew Tracker ===
 Contributors: bluefairydevelopment
+Donate link: https://ko-fi.com/bluefairydevelopment
 Tags: mead, wine, cider, homebrew, beer, fermentation, brewing log
 Requires at least: 6.5
 Tested up to: 7.1
