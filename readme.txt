@@ -5,7 +5,7 @@ Tags: mead, wine, cider, homebrew, beer, fermentation, brewing log
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPL-2.0-or-later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -158,6 +158,9 @@ No.
 
 == Changelog ==
 
+= 1.0.4 =
+* Fixed: The plugin package no longer includes developer and internal files that were never meant to ship.
+
 = 1.0.3 =
 * Compatibility: tested against WordPress 7.1.
 * The grey examples in the Ingredient, SG and pH boxes now read "e.g. Fermaid-O", "e.g. 1.090", "e.g. 3.4" so they are not mistaken for a typed value.
@@ -178,6 +181,9 @@ No.
 * First release: batches, a seeded style tree, vessels, an immutable timeline, pinned original gravity, ABV and attenuation with both formulas, an inline gravity chart, six derived stages, tasks with a Due panel and a Next due column, a paged list with Trash and Restore, display units, and a CSV export. Nothing of yours is removed on uninstall.
 
 == Upgrade Notice ==
+
+= 1.0.4 =
+Removes files that did not belong in the plugin package. No action required.
 
 = 1.0.0 =
 First release.

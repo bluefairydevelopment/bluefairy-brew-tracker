@@ -3,7 +3,7 @@
  * Plugin Name:       BlueFairy Brew Tracker
  * Plugin URI:        https://wordpress.bluefairydevelopment.com/brew-tracker/
  * Description:       A batch log for mead, wine, cider and beer: style, vessel, start date, gravity readings, additions, stage and what is due next.
- * Version:           1.0.3
+ * Version:           1.0.4
  * Requires at least: 6.5
  * Requires PHP:      8.1
  * Author:            Blue Fairy Development
@@ -19,7 +19,7 @@ declare(strict_types=1);
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'BFBT_VERSION',  '1.0.3' );
+define( 'BFBT_VERSION',  '1.0.4' );
 define( 'BFBT_FILE',     __FILE__ );
 define( 'BFBT_PATH',     plugin_dir_path( __FILE__ ) );
 define( 'BFBT_URL',      plugin_dir_url( __FILE__ ) );
