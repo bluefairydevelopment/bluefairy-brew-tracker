@@ -5,6 +5,8 @@
 /README.md
 /docs/COMPARISON.md
 /docs/MARKETING.txt
+/phpstan.neon
+/phpstan-bootstrap.php
 
 # Only the features guide PDF ships from docs/ (2026-10-28). docs/images/,
 # docs/screenshots/ and every other docs/ file are build inputs or internal
