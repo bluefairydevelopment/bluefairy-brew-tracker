@@ -79,7 +79,7 @@ HTML LONG DESCRIPTION
     </div>
     <h3>Upgrade to Brew Tracker Pro</h3>
     <p>Pro is an add-on that extends this same batch record, so everything you have logged is there the moment you install it. It adds <strong>recipes</strong> &mdash; an ingredient bill and a schedule template &mdash; and a seeded <strong>library of 25 recipes</strong> for mead, wine, cider and beer at 1, 3 or 5 US gallons; <strong>start a batch from a recipe</strong> with the bill scaled and every task created with its date; a <strong>daily digest email</strong> of what is overdue, due today and due tomorrow; a <strong>dashboard widget, admin calendar and .ics feed</strong> your phone subscribes to; a <strong>vessel board</strong> showing which vessel holds what and which are free; a <strong>Brewer role with phone-first front-end logging</strong>; and <strong>reports</strong> on batches per style, average ABV and attenuation, days per stage and vessel use.</p>
-    <p><a href="/product/bluefairy-brew-tracker-pro/">Get Brew Tracker Pro &mdash; $79</a></p>
+    <p><a href="/product/bluefairy-brew-tracker-pro/">Get Brew Tracker Pro &mdash; $25</a></p>
   </div>
 
 </div>
@@ -126,7 +126,7 @@ HTML LONG DESCRIPTION
 <p class="bfbt-dc-cta">
   <a href="/product/bluefairy-brew-tracker/">Get Brew Tracker &mdash; free</a>
   &nbsp;&middot;&nbsp;
-  <a href="/product/bluefairy-brew-tracker-pro/">Get Brew Tracker Pro &mdash; $79</a>
+  <a href="/product/bluefairy-brew-tracker-pro/">Get Brew Tracker Pro &mdash; $25</a>
 </p>
 
 
