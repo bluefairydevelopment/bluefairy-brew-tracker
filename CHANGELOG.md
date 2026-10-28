@@ -5,7 +5,7 @@
 ### Fixed
 - The plugin package no longer includes developer and internal files that were never meant to ship.
 
-1.0.3] — 2026-09-19
+## [1.0.3] — 2026-09-19
 
 ### Fixed
 - The grey example in the Ingredient, SG and pH boxes (entry and task forms)
