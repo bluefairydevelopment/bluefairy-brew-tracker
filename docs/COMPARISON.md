@@ -83,4 +83,4 @@ is itself a LIKE wildcard. Every option is deleted by its literal name.
 ## Pricing
 
 Free plugin: $0, wordpress.org.
-Pro: $79 once, lifetime licence, one site. Requires the free plugin.
+Pro: $25 once, lifetime licence, one site. Requires the free plugin.

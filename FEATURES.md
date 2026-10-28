@@ -295,7 +295,7 @@ lives, and nothing to migrate when you upgrade.
 Pro column describes Brew Tracker Pro 1.0.
 
 
-| | Pro — $79 | Free |
+| | Pro — $25 | Free |
 |---|---|---|
 | Batch record: name, style, vessel, start date, volume, target OG/FG, notes | Yes | Yes |
 | Style taxonomy seeded with Mead, Wine, Cider, Beer and their substyles | Yes | Yes |
