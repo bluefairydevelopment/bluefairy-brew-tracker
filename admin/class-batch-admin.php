@@ -30,7 +30,11 @@ class BFBT_Batch_Admin {
 	/** Who may change settings and export. */
 	public const CAP_MANAGE = 'manage_options';
 
-	/** Hook suffixes of this plugin's screens; assets load on these only. */
+	/**
+	 * Hook suffixes of this plugin's screens; assets load on these only.
+	 *
+	 * @var list<string>
+	 */
 	private static array $screens = [];
 
 	public static function init(): void {
@@ -181,7 +185,11 @@ class BFBT_Batch_Admin {
 	 * forms) use the same two calls.
 	 */
 
-	/** The remembered fields of this request, once read; null until then. */
+	/**
+	 * The remembered fields of this request, once read; null until then.
+	 *
+	 * @var array{form: string, fields: array<mixed>}|null
+	 */
 	private static ?array $remembered = null;
 
 	/**
